@@ -5,18 +5,35 @@ import (
 	"fmt"
 )
 
+/* Alternativa con un struct
+type usuarioEmail struct {
+	PasswordMaestra string
+	Datos           map[string][string]string
+}
+*/
+
 type usuario struct {
-	Password string
-	Datos    map[string]string
+	MasterPassword string
+	Accounts       map[string]account
 }
 
-/* Demo estructura
+type account struct {
+	User     string
+	Password string
+}
 
+/* Demo estructura en json
 "alu@alu.ua.es" : {
-    password: "accoutPass"
-    data: [
-        "facebook": "12345"
-        "twitter": "abcd"
+    "MasterPassword": "accoutPass",
+    "Accounts": [
+        "facebook": {
+			"User": "usuarioFacebook"
+			"Password": "12345"
+		},
+        "twitter": {
+			"User": "usuarioTwitter"
+			"Password": "54321"
+		}
     ]
 }
 */
@@ -27,14 +44,14 @@ var gestor = make(map[string]usuario)
 func AddUser(email string, pass string) {
 	// todo: comprobar si el usuario ya existe
 
-	gestor[email] = usuario{Password: pass, Datos: make(map[string]string)}
+	gestor[email] = usuario{MasterPassword: pass, Accounts: make(map[string]account)}
 }
 
 // AddToUser añade datos a un ya dado de alta
-func AddToUser(email string, service string, servicePass string) {
+func AddAccountToUser(userEmail string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
 
-	gestor[email].Datos[service] = servicePass
+	gestor[userEmail].Accounts[serviceName] = account{User: serviceUser, Password: servicePass}
 }
 
 // GetAll (Debug) Devuelve un string json con todos los datos

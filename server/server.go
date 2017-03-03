@@ -15,10 +15,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func Launch() {
 	// todo: borrar
 	// Datos de relleno para probar el acceso (BORRAR)
-	database.AddUser("demoEmail", "accountPass")
-	database.AddToUser("demoEmail", "facebook", "12345")
-	database.AddToUser("demoEmail", "twitter", "abcde")
-	database.AddUser("demoEmail2", "accountPass2")
+	database.AddUser("demoEmail", "demoMasterPass")
+	database.AddAccountToUser("demoEmail", "facebook", "facebookUser", "facebookPass")
+	database.AddAccountToUser("demoEmail", "twitter", "twitterUser", "twitterPass")
+	database.AddUser("demoEmail2", "demoMasterPass2")
 
 	http.HandleFunc("/hello", handler)
 	err := http.ListenAndServeTLS(":8021", "cert.pem", "key.pem", nil)

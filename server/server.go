@@ -13,35 +13,47 @@ import (
 	"github.com/bertus193/gestorSDS/server/database"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func handler(w http.ResponseWriter, req *http.Request) {
+	fmt.Printf("run")
 	fmt.Fprintf(w, database.GetAll())
 }
 
-func registroUsuario(w http.ResponseWriter, r *http.Request) {
+func registroUsuario(w http.ResponseWriter, req *http.Request) {
+	// Parseamos el formulario
+	req.ParseForm()
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+
+	// Recuperamos los datos
+	email := req.Form.Get("email")
+	pass := req.Form.Get("pass")
+	log.Println("registroUsuario: [" + email + ", " + pass + "]")
+
+	// Respondemos
 	fmt.Fprintf(w, database.GetAll())
 }
 
-func modificarUsuario(w http.ResponseWriter, r *http.Request) {
+func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, database.GetAll())
 }
 
-func crearCuenta(w http.ResponseWriter, r *http.Request) {
+func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, database.GetAll())
 }
 
-func modificarCuenta(w http.ResponseWriter, r *http.Request) {
+func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, database.GetAll())
 }
 
-func eliminarCuenta(w http.ResponseWriter, r *http.Request) {
+func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, database.GetAll())
 }
 
-func listarCuentas(w http.ResponseWriter, r *http.Request) {
+func listarCuentas(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, database.GetAll())
 }
 
-func detallesCuenta(w http.ResponseWriter, r *http.Request) {
+func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, database.GetAll())
 }
 

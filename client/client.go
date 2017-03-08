@@ -19,7 +19,66 @@ func registroUsuario(client *http.Client, email string, pass string) (*http.Resp
 	data.Set("pass", pass)
 
 	return client.PostForm(baseURL+"/usuario/registro", data)
+}
 
+func modificarUsuario(client *http.Client, email string, passAnterior string, passNuevo string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", email)
+	data.Set("passAnterior", passAnterior)
+	data.Set("passNuevo", passNuevo)
+
+	return client.PostForm(baseURL+"/usuario/modificar", data)
+}
+
+func crearCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", email)
+	data.Set("pass", pass)
+	data.Set("nombreServicio", nombreServicio)
+	data.Set("usuarioServicio", usuarioServicio)
+	data.Set("passServicio", passServicio)
+
+	return client.PostForm(baseURL+"/cuentas/nueva", data)
+}
+
+func modificarCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string, passServicioAnterior string, passServicioNueva string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", email)
+	data.Set("pass", pass)
+	data.Set("nombreServicio", nombreServicio)
+	data.Set("usuarioServicio", usuarioServicio)
+	data.Set("passServicioAnterior", passServicioAnterior)
+	data.Set("passServicioNueva", passServicioAnterior)
+
+	return client.PostForm(baseURL+"/cuentas/modificar", data)
+}
+
+func eliminarCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", email)
+	data.Set("pass", pass)
+	data.Set("nombreServicio", nombreServicio)
+	data.Set("usuarioServicio", usuarioServicio)
+
+	return client.PostForm(baseURL+"/cuentas/eliminar", data)
+}
+
+func listarCuentas(client *http.Client, email string, pass string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", email)
+	data.Set("pass", pass)
+
+	return client.PostForm(baseURL+"/cuentas", data)
+}
+
+func detallesCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", email)
+	data.Set("pass", pass)
+	data.Set("nombreServicio", nombreServicio)
+	data.Set("usuarioServicio", usuarioServicio)
+
+	return client.PostForm(baseURL+"/cuentas/detalles", data)
 }
 
 //Start Inicio Cliente

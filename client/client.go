@@ -11,6 +11,17 @@ import (
 	"github.com/bertus193/gestorSDS/config"
 )
 
+var baseURL = config.SecureURL + config.SecureServerPort
+
+func registroUsuario(client *http.Client, email string, pass string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", email)
+	data.Set("pass", pass)
+
+	return client.PostForm(baseURL+"/usuario/registro", data)
+
+}
+
 //Start Inicio Cliente
 func Start() {
 	tr := &http.Transport{
@@ -19,11 +30,8 @@ func Start() {
 	client := &http.Client{Transport: tr}
 	// two different ways to execute an http.GET
 
-	data := url.Values{}    // estructura para contener los valores
-	data.Set("cmd", "hola") // comando (string)
-
-	baseURL := config.SecureURL + config.SecureServerPort
-	response, err := client.PostForm(baseURL+"/hello", data)
+	//response, err := client.PostForm(baseURL+"/hello", data)
+	response, err := registroUsuario(client, "alu@alu.ua.es", "hash_del_pass")
 	if err != nil {
 		log.Fatal(err)
 	} else {

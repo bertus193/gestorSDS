@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"./client"
-	"./server"
+	"github.com/bertus193/gestorSDS/client"
+	"github.com/bertus193/gestorSDS/server"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"./database"
+	"github.com/bertus193/gestorSDS/server/database"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {

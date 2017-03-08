@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"net/url"
 
 	"github.com/bertus193/gestorSDS/config"
+	"github.com/bertus193/gestorSDS/model"
 )
 
 var baseURL = config.SecureURL + config.SecureServerPort
@@ -63,12 +65,41 @@ func eliminarCuenta(client *http.Client, email string, pass string, nombreServic
 	return client.PostForm(baseURL+"/cuentas/eliminar", data)
 }
 
-func listarCuentas(client *http.Client, email string, pass string) (*http.Response, error) {
+func listarCuentas(client *http.Client, email string, pass string) {
 	data := url.Values{}
 	data.Set("email", email)
 	data.Set("pass", pass)
 
-	return client.PostForm(baseURL+"/cuentas", data)
+	response, err := client.PostForm(baseURL+"/cuentas", data)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		// Cerramos la conexión
+		defer response.Body.Close()
+
+		// Leemos la respuesta
+		contents, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Recuperamos el código http
+		fmt.Println(response.StatusCode)
+
+		// Recuperamos el objeto del mensaje origianl
+		result := make(map[string]model.Account)
+		if err := json.Unmarshal(contents, &result); err != nil {
+			fmt.Println("Error al recuperar el objeto")
+		}
+
+		// Imprimimos los resultados
+		for k := range result {
+			tempAccount := result[k]
+			fmt.Println("[" + k + "]")
+			fmt.Println("--> " + tempAccount.User)
+			fmt.Println("--> " + tempAccount.Password)
+		}
+	}
 }
 
 func detallesCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string) (*http.Response, error) {
@@ -90,15 +121,5 @@ func Start() {
 	// two different ways to execute an http.GET
 
 	//response, err := client.PostForm(baseURL+"/hello", data)
-	response, err := registroUsuario(client, "alu@alu.ua.es", "hash_del_pass")
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		defer response.Body.Close()
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(contents))
-	}
+	listarCuentas(client, "demoEmail", "hash_del_pass")
 }

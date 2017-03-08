@@ -6,15 +6,24 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+
+	"github.com/bertus193/gestorSDS/config"
 )
 
+//Start Inicio Cliente
 func Start() {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
 	// two different ways to execute an http.GET
-	response, err := client.Get("https://127.0.0.1:8021/hello")
+
+	data := url.Values{}    // estructura para contener los valores
+	data.Set("cmd", "hola") // comando (string)
+
+	baseURL := config.SecureURL + config.SecureServerPort
+	response, err := client.PostForm(baseURL+"/hello", data)
 	if err != nil {
 		log.Fatal(err)
 	} else {

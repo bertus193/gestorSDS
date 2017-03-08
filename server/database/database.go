@@ -3,24 +3,9 @@ package database
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/bertus193/gestorSDS/model"
 )
-
-/* Alternativa con un struct
-type usuarioEmail struct {
-	PasswordMaestra string
-	Datos           map[string][string]string
-}
-*/
-
-type usuario struct {
-	MasterPassword string
-	Accounts       map[string]account
-}
-
-type account struct {
-	User     string
-	Password string
-}
 
 /* Demo estructura en json
 "alu@alu.ua.es" : {
@@ -38,25 +23,28 @@ type account struct {
 }
 */
 
-var gestor = make(map[string]usuario)
+var gestor = make(map[string]model.Usuario)
 
 // AddUser añade un usuarios al sistema
 func AddUser(email string, pass string) {
 	// todo: comprobar si el usuario ya existe
 
-	gestor[email] = usuario{MasterPassword: pass, Accounts: make(map[string]account)}
+	gestor[email] = model.Usuario{MasterPassword: pass, Accounts: make(map[string]model.Account)}
 }
 
-// AddToUser añade datos a un ya dado de alta
+// AddAccountToUser añade datos a un ya dado de alta
 func AddAccountToUser(userEmail string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
 
-	gestor[userEmail].Accounts[serviceName] = account{User: serviceUser, Password: servicePass}
+	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
 }
 
-// GetAll (Debug) Devuelve un string json con todos los datos
-func GetAll() string {
-	j, err := json.Marshal(gestor)
+// GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario
+func GetJSONAllAccountsFromUser(usuario string, pass string) string {
+	userAccounts := gestor[usuario].Accounts
+	// todo: comprobar y validar contraseña
+
+	j, err := json.Marshal(userAccounts)
 
 	if err != nil {
 		fmt.Println(err)
@@ -64,3 +52,14 @@ func GetAll() string {
 
 	return string(j)
 }
+
+// GetAll (Debug) Devuelve un string json con todos los datos
+/*func GetAll() string {
+	j, err := json.Marshal(gestor)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return string(j)
+}*/

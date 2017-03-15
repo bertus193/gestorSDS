@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bertus193/gestorSDS/config"
+	"github.com/bertus193/gestorSDS/server/database"
 )
 
 // función para escribir una respuesta del servidor
@@ -47,6 +48,7 @@ func Launch() {
 
 	<-stopChan // espera señal SIGINT
 	log.Println("Apagando servidor ...")
+	database.After()
 
 	// apagar servidor de forma segura
 	ctx, fnc := context.WithTimeout(context.Background(), 5*time.Second)

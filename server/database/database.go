@@ -3,6 +3,8 @@ package database
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/bertus193/gestorSDS/model"
 )
@@ -26,13 +28,49 @@ import (
 var gestor = make(map[string]model.Usuario)
 
 func init() {
+	before()
 	// todo: borrar
 	// Datos de relleno para probar el acceso (BORRAR)
-	AddUser("demoEmail", "demoMasterPass")
+	/*AddUser("demoEmail", "demoMasterPass")
 	AddAccountToUser("demoEmail", "facebook", "facebookUser", "facebookPass")
 	AddAccountToUser("demoEmail", "twitter", "twitterUser", "twitterPass")
-	AddUser("demoEmail2", "demoMasterPass2")
+	AddUser("demoEmail2", "demoMasterPass2")*/
 
+}
+
+func before() {
+	bytesEntrada, err := ioutil.ReadFile("./server/database/bd.txt")
+	if err != nil {
+		panic(0)
+	}
+
+	result := make(map[string]model.Usuario)
+
+	if err := json.Unmarshal(bytesEntrada, &result); err != nil {
+		panic("Error al leer fichero de entrada")
+	}
+
+	gestor = result
+}
+
+// After Persistencia Base de Datos
+func After() {
+	salida, err := os.Create("./server/database/bd.txt")
+	if err != nil {
+		panic(0)
+	}
+
+	// todo: comprobar y validar contraseña
+
+	j, err := json.Marshal(gestor)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	usuarios := string(j)
+
+	salida.Write([]byte(usuarios))
 }
 
 // AddUser añade un usuarios al sistema

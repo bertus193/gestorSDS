@@ -41,15 +41,20 @@ func init() {
 }
 
 func before() {
-	bytesEntrada, err := ioutil.ReadFile("./server/database/bd.txt")
-	if err != nil {
-		panic(0)
-	}
-
 	result := make(map[string]model.Usuario)
 
-	if err := json.Unmarshal(bytesEntrada, &result); err != nil {
-		panic("Error al leer fichero de entrada")
+	bytesEntrada, err := ioutil.ReadFile("./server/database/bd.txt")
+	error := false
+	if err != nil {
+		error = true
+	}
+	if error == true || len(string(bytesEntrada)) == 0 {
+		//fileData := []byte("{}")
+		ioutil.WriteFile("./server/database/bd.txt", []byte(""), 0644)
+	} else {
+		if err := json.Unmarshal(bytesEntrada, &result); err != nil {
+			panic("Error al leer fichero de entrada")
+		}
 	}
 
 	gestor = result

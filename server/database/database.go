@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/bertus193/gestorSDS/model"
+	"github.com/bertus193/gestorSDS/utils"
 )
 
 /* Demo estructura en json
@@ -77,7 +78,16 @@ func After() {
 func AddUser(email string, pass string) {
 	// todo: comprobar si el usuario ya existe
 
-	gestor[email] = model.Usuario{MasterPassword: pass, Accounts: make(map[string]model.Account)}
+	// fmt.Print(GetAll())
+	salt, err1 := utils.GenerateRandomBytes(64)
+	if err1 == nil {
+		bytePass := []byte(pass)
+		hashpass, _ := utils.DeriveKey(bytePass, salt)
+
+		gestor[email] = model.Usuario{MasterPassword: string(hashpass), MasterPasswordSalt: string(salt), Accounts: make(map[string]model.Account)}
+	}
+
+	fmt.Print(GetAll())
 }
 
 // AddAccountToUser añade datos a un ya dado de alta
@@ -112,7 +122,7 @@ func GetJSONAllAccountsFromUser(usuario string, pass string) string {
 }
 
 // GetAll (Debug) Devuelve un string json con todos los datos
-/*func GetAll() string {
+func GetAll() string {
 	j, err := json.Marshal(gestor)
 
 	if err != nil {
@@ -120,4 +130,4 @@ func GetJSONAllAccountsFromUser(usuario string, pass string) string {
 	}
 
 	return string(j)
-}*/
+}

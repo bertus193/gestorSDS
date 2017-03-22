@@ -1,8 +1,9 @@
 package model
 
 type Usuario struct {
-	MasterPassword string
-	Accounts       map[string]Account
+	MasterPassword     string
+	MasterPasswordSalt string
+	Accounts           map[string]Account
 }
 
 type Account struct {

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -83,11 +84,11 @@ func AddUser(email string, pass string) {
 	if err1 == nil {
 		bytePass := []byte(pass)
 		hashpass, _ := utils.DeriveKey(bytePass, salt)
+		saltbase64 := base64.StdEncoding.EncodeToString(salt)
 
-		gestor[email] = model.Usuario{MasterPassword: string(hashpass), MasterPasswordSalt: string(salt), Accounts: make(map[string]model.Account)}
+		gestor[email] = model.Usuario{MasterPassword: string(hashpass), MasterPasswordSalt: saltbase64, Accounts: make(map[string]model.Account)}
 	}
 
-	fmt.Print(GetAll())
 }
 
 // AddAccountToUser añade datos a un ya dado de alta

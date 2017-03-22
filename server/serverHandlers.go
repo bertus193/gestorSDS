@@ -36,11 +36,12 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
 	log.Println("registroUsuario: [" + email + ", " + pass + "]")
+	database.AddUser(email, pass)
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 501, "to-do")
+	response(w, false, 201, "")
 }
 
 func modificarUsuario(w http.ResponseWriter, req *http.Request) {

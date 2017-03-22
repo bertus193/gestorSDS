@@ -1,1 +1,1 @@
-{}
+{"prueba@asd.com":{"MasterPassword":"a4c62b5e5883aaecb09b757eb59561a17313a79f20360af7a42c45fc8812aab2","MasterPasswordSalt":"vUx9k6UrrdhwF3eeMx5SpXppp5nH3OTAUxhRO18SGowPR6fleRs6MkA8oGs8zJRPhut+MdEjKe6anCngueIbXQ==","Accounts":{}},"prueba@prueba.com":{"MasterPassword":"e8e3dcf9f61db1ed0c718bcd3a1d97501be4834402f63d170cf639c67bfc3216","MasterPasswordSalt":"~\u001a~� dvZZ�\u0026*���ԕ\u00078r�a\\�K!S\u001b�N�5\u0010gID9�B�N8��\u0012�!��'��wj�\\��)L�`��","Accounts":{}}}

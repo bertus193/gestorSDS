@@ -67,10 +67,8 @@ func uiInicio(fromError string) {
 	switch {
 	case inputSelectionStr == "1":
 		uiLoginMaster("")
-	/*
-		case inputSelectionStr == "2":
-			uiRegistroMaster("")
-	*/
+	case inputSelectionStr == "2":
+		uiRegistroMaster("")
 	default:
 		uiInicio("La opción elegida no es correcta")
 	}
@@ -103,7 +101,24 @@ func uiLoginMaster(fromError string) {
 }
 
 func uiRegistroMaster(fromError string) {
+	clearScreen()
 
+	var inputUser string
+	var inputPass string
+	fmt.Printf("# Registro de usuarios\n\n")
+	if fromError != "" {
+		fmt.Printf("* %s\n\n", fromError)
+	}
+
+	fmt.Print("Email: ")
+	fmt.Scanf("%s", &inputUser)
+	fmt.Print("Contraseña: ")
+	fmt.Scanf("%s", &inputPass)
+
+	registroUsuario(httpClient, inputUser, inputPass)
+	uiInicio("Registrado -")
+
+	//uiMainMenu()
 }
 
 func uiUserMainMenu(fromError string) {

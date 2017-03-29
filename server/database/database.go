@@ -118,7 +118,7 @@ func ExistsUser(userEmail string, userPass string) bool {
 }
 
 // AddAccountToUser añade datos a un ya dado de alta
-func AddAccountToUser(userEmail string, serviceName string, serviceUser string, servicePass string) {
+func AddAccountToUser(userEmail string, userPass string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
 
 	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}

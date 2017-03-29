@@ -77,6 +77,9 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	passServicio := req.Form.Get("passServicio")
 	log.Println("crearCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
 
+	// Añadimos el servicio a la BD
+	database.AddAccountToUser(email, pass, nombreServicio, usuarioServicio, passServicio)
+
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos

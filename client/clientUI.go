@@ -124,9 +124,28 @@ func uiRegistroMaster(fromError string) {
 func uiUserMainMenu(fromError string) {
 	clearScreen()
 
+	fmt.Printf("# Página de usuario\n\n")
+	fmt.Printf("------ Listado de cuentas ------\n\n")
+	// Recuperamos las cuentas del usuarios
+	cuentas := listarCuentas(httpClient, logguedUserEmail, logguedUserPass)
+
+	if cuentas != nil {
+		// Imprimimos los resultados
+		for c := range cuentas {
+			tempAccount := cuentas[c]
+			fmt.Printf("[%s] -> (%s / %s)\n", c, tempAccount.User, tempAccount.Password)
+		}
+	} else {
+		fmt.Printf("No tienes ninguna cuenta guardada\n")
+	}
+
+	fmt.Printf("\n--------------------------------\n\n")
+
 	var inputSelectionStr string
-	fmt.Printf("# Menú de usuario\n\n")
-	fmt.Println("1. Ver cuentas de servicio (legacy)")
+	fmt.Println("1. Añadir cuenta de servicio")
+	fmt.Println("2. Ver detalle cuenta de servicio (to-do)")
+	fmt.Println("3. Modificar mis datos (to-do)")
+	fmt.Println("4. Eliminar mi cuenta (to-do)")
 	fmt.Println("0. Salir")
 
 	if fromError != "" {
@@ -137,13 +156,36 @@ func uiUserMainMenu(fromError string) {
 
 	switch {
 	case inputSelectionStr == "1":
-		// to-do
-		listarCuentas(httpClient, logguedUserEmail, logguedUserPass)
+		uiAddAccount("")
+	// case inputSelectionStr == "2":
+	// uiDetailAccountMenu("")
 	case inputSelectionStr == "0":
 		os.Exit(0)
 	default:
 		uiUserMainMenu("La opción elegida no es correcta")
 	}
+}
+
+func uiAddAccount(fromError string) {
+	clearScreen()
+
+	var inputAccountType string
+	var inputAccountUser string
+	var inputAccountPass string
+	fmt.Printf("# Añadir cuenta de servicio\n\n")
+	if fromError != "" {
+		fmt.Printf("* %s\n\n", fromError)
+	}
+
+	fmt.Print("Tipo de cuenta (twitter, facebook, etc): ")
+	fmt.Scanf("%s", &inputAccountType)
+	fmt.Print("Usuarios: ")
+	fmt.Scanf("%s", &inputAccountUser)
+	fmt.Print("Contraseña: ")
+	fmt.Scanf("%s", &inputAccountPass)
+
+	crearCuenta(httpClient, logguedUserEmail, logguedUserPass, inputAccountType, inputAccountUser, inputAccountPass)
+	uiUserMainMenu("")
 }
 
 func startUi(c *http.Client) {

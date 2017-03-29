@@ -56,7 +56,8 @@ func uiInicio(fromError string) {
 	var inputSelectionStr string
 	fmt.Printf("# Bienvenido\n\n")
 	fmt.Println("1. Entrar")
-	fmt.Println("2. Crear usuario (to-do)")
+	fmt.Println("2. Crear usuario")
+	fmt.Println("0. Salir")
 
 	if fromError != "" {
 		fmt.Printf("\n* %s", fromError)
@@ -69,6 +70,8 @@ func uiInicio(fromError string) {
 		uiLoginMaster("")
 	case inputSelectionStr == "2":
 		uiRegistroMaster("")
+	case inputSelectionStr == "0":
+		os.Exit(0)
 	default:
 		uiInicio("La opción elegida no es correcta")
 	}
@@ -97,7 +100,6 @@ func uiLoginMaster(fromError string) {
 	} else {
 		uiInicio("El usuario no existe")
 	}
-	//uiMainMenu()
 }
 
 func uiRegistroMaster(fromError string) {
@@ -116,9 +118,7 @@ func uiRegistroMaster(fromError string) {
 	fmt.Scanf("%s", &inputPass)
 
 	registroUsuario(httpClient, inputUser, inputPass)
-	uiInicio("Registrado -")
-
-	//uiMainMenu()
+	uiInicio("")
 }
 
 func uiUserMainMenu(fromError string) {

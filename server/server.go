@@ -36,8 +36,6 @@ func Launch() {
 	mux.Handle("/cuentas/eliminar", http.HandlerFunc(eliminarCuenta))
 	mux.Handle("/cuentas/detalles", http.HandlerFunc(detallesCuenta))
 
-	//http.HandleFunc("/hello", handler)
-
 	srv := &http.Server{Addr: config.SecureServerPort, Handler: mux}
 
 	go func() {
@@ -48,9 +46,11 @@ func Launch() {
 
 	<-stopChan // espera señal SIGINT
 	log.Println("Apagando servidor ...")
+
+	// Guarda la información de la BD en un fichero
 	database.After()
 
-	// apagar servidor de forma segura
+	// Apaga el servidor de forma segura
 	ctx, fnc := context.WithTimeout(context.Background(), 5*time.Second)
 	fnc()
 	srv.Shutdown(ctx)

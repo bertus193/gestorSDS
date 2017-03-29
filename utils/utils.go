@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
-// deriveKey generates a new NaCl key from a passphrase and salt.
+// DeriveKey Genera un hash a partir de una contraseña y un sal
 func DeriveKey(pass, salt []byte) ([]byte, error) {
 
 	key, err := scrypt.Key(pass, salt, 16384, 8, 1, 32)
@@ -18,6 +18,7 @@ func DeriveKey(pass, salt []byte) ([]byte, error) {
 	return []byte(fmt.Sprintf("%x", key)), nil
 }
 
+// GenerateRandomBytes Genera cadenas aleatorias
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)

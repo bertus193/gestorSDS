@@ -7,6 +7,7 @@ import (
 	"github.com/bertus193/gestorSDS/server/database"
 )
 
+// Comprueba si existe un usuario en la BD
 func loginUsuario(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
@@ -28,6 +29,7 @@ func loginUsuario(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// Añade un usuario a la BD
 func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
@@ -36,6 +38,7 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
 	log.Println("registroUsuario: [" + email + ", " + pass + "]")
+
 	database.AddUser(email, pass)
 
 	// Cabecera estándar
@@ -44,6 +47,7 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 201, "")
 }
 
+// Modifica los datos de un usuario de la BD
 func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
@@ -60,6 +64,7 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 501, "to-do")
 }
 
+// Añade una cuenta de servicio a un usuario de la BD
 func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
@@ -78,6 +83,7 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 501, "to-do")
 }
 
+// Modifica una cuenta de servicio a un usuario de la BD
 func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
@@ -97,6 +103,7 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 501, "to-do")
 }
 
+// Elimina una cuenta de servicio a un usuario de la BD
 func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
@@ -114,6 +121,7 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 501, "to-do")
 }
 
+// Recupera las cuentas de servicio de un usuario de la BD
 func listarCuentas(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
@@ -130,6 +138,7 @@ func listarCuentas(w http.ResponseWriter, req *http.Request) {
 
 }
 
+// Recupera los detalles de una cuenta de servicio a un usuario de la BD
 func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()

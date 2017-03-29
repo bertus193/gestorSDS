@@ -56,7 +56,8 @@ func uiInicio(fromError string) {
 	var inputSelectionStr string
 	fmt.Printf("# Bienvenido\n\n")
 	fmt.Println("1. Entrar")
-	fmt.Println("2. Crear usuario (to-do)")
+	fmt.Println("2. Crear usuario")
+	fmt.Println("0. Salir")
 
 	if fromError != "" {
 		fmt.Printf("\n* %s", fromError)
@@ -69,6 +70,8 @@ func uiInicio(fromError string) {
 		uiLoginMaster("")
 	case inputSelectionStr == "2":
 		uiRegistroMaster("")
+	case inputSelectionStr == "0":
+		os.Exit(0)
 	default:
 		uiInicio("La opción elegida no es correcta")
 	}
@@ -97,7 +100,6 @@ func uiLoginMaster(fromError string) {
 	} else {
 		uiInicio("El usuario no existe")
 	}
-	//uiMainMenu()
 }
 
 func uiRegistroMaster(fromError string) {
@@ -116,17 +118,34 @@ func uiRegistroMaster(fromError string) {
 	fmt.Scanf("%s", &inputPass)
 
 	registroUsuario(httpClient, inputUser, inputPass)
-	uiInicio("Registrado -")
-
-	//uiMainMenu()
+	uiInicio("")
 }
 
 func uiUserMainMenu(fromError string) {
 	clearScreen()
 
+	fmt.Printf("# Página de usuario\n\n")
+	fmt.Printf("------ Listado de cuentas ------\n\n")
+	// Recuperamos las cuentas del usuarios
+	cuentas := listarCuentas(httpClient, logguedUserEmail, logguedUserPass)
+
+	if cuentas != nil && len(cuentas) != 0 {
+		// Imprimimos los resultados
+		for c := range cuentas {
+			tempAccount := cuentas[c]
+			fmt.Printf("[%s] -> (%s / %s)\n", c, tempAccount.User, tempAccount.Password)
+		}
+	} else {
+		fmt.Printf("* No tienes ninguna cuenta guardada\n")
+	}
+
+	fmt.Printf("\n--------------------------------\n\n")
+
 	var inputSelectionStr string
-	fmt.Printf("# Menú de usuario\n\n")
-	fmt.Println("1. Ver cuentas de servicio (legacy)")
+	fmt.Println("1. Añadir cuenta de servicio")
+	fmt.Println("2. Ver detalle cuenta de servicio (to-do)")
+	fmt.Println("3. Modificar mis datos (to-do)")
+	fmt.Println("4. Eliminar mi cuenta (to-do)")
 	fmt.Println("0. Salir")
 
 	if fromError != "" {
@@ -137,13 +156,39 @@ func uiUserMainMenu(fromError string) {
 
 	switch {
 	case inputSelectionStr == "1":
-		// to-do
-		listarCuentas(httpClient, logguedUserEmail, logguedUserPass)
+		uiAddAccount("")
+	case inputSelectionStr == "2":
+		var inputAccountSelectionStr string
+		fmt.Print("Elige la cuenta: ")
+		fmt.Scanf("%s", &inputAccountSelectionStr)
+		uiUserMainMenu("La opción elegida no es correcta")
 	case inputSelectionStr == "0":
 		os.Exit(0)
 	default:
 		uiUserMainMenu("La opción elegida no es correcta")
 	}
+}
+
+func uiAddAccount(fromError string) {
+	clearScreen()
+
+	var inputAccountType string
+	var inputAccountUser string
+	var inputAccountPass string
+	fmt.Printf("# Añadir cuenta de servicio\n\n")
+	if fromError != "" {
+		fmt.Printf("* %s\n\n", fromError)
+	}
+
+	fmt.Print("Tipo de cuenta (twitter, facebook, etc): ")
+	fmt.Scanf("%s", &inputAccountType)
+	fmt.Print("Usuario: ")
+	fmt.Scanf("%s", &inputAccountUser)
+	fmt.Print("Contraseña: ")
+	fmt.Scanf("%s", &inputAccountPass)
+
+	crearCuenta(httpClient, logguedUserEmail, logguedUserPass, inputAccountType, inputAccountUser, inputAccountPass)
+	uiUserMainMenu("")
 }
 
 func startUi(c *http.Client) {

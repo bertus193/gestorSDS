@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -19,7 +18,6 @@ func loginUsuario(client *http.Client, email string, pass string) bool {
 	response, err := client.PostForm(baseURL+"/usuario/login", data)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	} else {
 		// Cerramos la conexión
 		defer response.Body.Close()
@@ -27,8 +25,8 @@ func loginUsuario(client *http.Client, email string, pass string) bool {
 		if response.StatusCode == 200 {
 			return true
 		}
-		return false
 	}
+	return false
 }
 
 func registroUsuario(client *http.Client, email string, pass string) (*http.Response, error) {
@@ -81,7 +79,7 @@ func eliminarCuenta(client *http.Client, email string, pass string, nombreServic
 	return client.PostForm(baseURL+"/cuentas/eliminar", data)
 }
 
-func listarCuentas(client *http.Client, email string, pass string) {
+func listarCuentas(client *http.Client, email string, pass string) map[string]model.Account {
 	data := url.Values{}
 	data.Set("email", email)
 	data.Set("pass", pass)
@@ -100,22 +98,16 @@ func listarCuentas(client *http.Client, email string, pass string) {
 		}
 
 		// Recuperamos el código http
-		fmt.Println(response.StatusCode)
+		// fmt.Println(response.StatusCode)
 
 		// Recuperamos el objeto del mensaje origianl
 		result := make(map[string]model.Account)
-		if err := json.Unmarshal(contents, &result); err != nil {
-			fmt.Println("Error al recuperar el objeto")
-		}
-
-		// Imprimimos los resultados
-		for k := range result {
-			tempAccount := result[k]
-			fmt.Println("[" + k + "]")
-			fmt.Println("--> " + tempAccount.User)
-			fmt.Println("--> " + tempAccount.Password)
+		if err := json.Unmarshal(contents, &result); err == nil {
+			return result
 		}
 	}
+
+	return nil
 }
 
 func detallesCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string) (*http.Response, error) {

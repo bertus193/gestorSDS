@@ -40,6 +40,7 @@ func init() {
 
 }
 
+// Lee el fichero
 func before() {
 	result := make(map[string]model.Usuario)
 
@@ -84,33 +85,43 @@ func After() {
 func AddUser(email string, pass string) {
 	// todo: comprobar si el usuario ya existe
 
-	// fmt.Print(GetAll())
-	salt, err1 := utils.GenerateRandomBytes(64)
-	if err1 == nil {
+	salt, errSalt := utils.GenerateRandomBytes(64)
+	if errSalt == nil {
 		bytePass := []byte(pass)
-		hashpass, _ := utils.DeriveKey(bytePass, salt)
-		saltbase64 := base64.StdEncoding.EncodeToString(salt)
+		hashPass, _ := utils.DeriveKey(bytePass, salt)
+		saltBase64 := base64.StdEncoding.EncodeToString(salt)
 
-		gestor[email] = model.Usuario{MasterPassword: string(hashpass), MasterPasswordSalt: saltbase64, Accounts: make(map[string]model.Account)}
+		gestor[email] = model.Usuario{
+			MasterPassword:     string(hashPass),
+			MasterPasswordSalt: saltBase64,
+			Accounts:           make(map[string]model.Account)}
 	}
-
 }
 
-// AddAccountToUser añade datos a un ya dado de alta
-func AddAccountToUser(userEmail string, serviceName string, serviceUser string, servicePass string) {
-	// todo: comprobar que el usuario existe antes de asignar
-
-	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
-}
-
+// ExistsUser Comprueba que el usuario existe en la BD
 func ExistsUser(userEmail string, userPass string) bool {
 	user, ok := gestor[userEmail]
 	if ok {
-		if userPass == user.MasterPassword {
+		// Comprobamos la contraseña
+		// Recuperamos el salt del usuario
+		salt, _ := base64.StdEncoding.DecodeString(user.MasterPasswordSalt)
+		bytePass := []byte(userPass)
+		// Regeneramos el hash
+		hashPass, _ := utils.DeriveKey(bytePass, salt)
+
+		// Comprobamos que sean iguales
+		if user.MasterPassword == string(hashPass) {
 			return true
 		}
 	}
 	return false
+}
+
+// AddAccountToUser añade datos a un ya dado de alta
+func AddAccountToUser(userEmail string, userPass string, serviceName string, serviceUser string, servicePass string) {
+	// todo: comprobar que el usuario existe antes de asignar
+
+	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
 }
 
 // GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario

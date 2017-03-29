@@ -129,14 +129,14 @@ func uiUserMainMenu(fromError string) {
 	// Recuperamos las cuentas del usuarios
 	cuentas := listarCuentas(httpClient, logguedUserEmail, logguedUserPass)
 
-	if cuentas != nil {
+	if cuentas != nil && len(cuentas) != 0 {
 		// Imprimimos los resultados
 		for c := range cuentas {
 			tempAccount := cuentas[c]
 			fmt.Printf("[%s] -> (%s / %s)\n", c, tempAccount.User, tempAccount.Password)
 		}
 	} else {
-		fmt.Printf("No tienes ninguna cuenta guardada\n")
+		fmt.Printf("* No tienes ninguna cuenta guardada\n")
 	}
 
 	fmt.Printf("\n--------------------------------\n\n")
@@ -157,8 +157,11 @@ func uiUserMainMenu(fromError string) {
 	switch {
 	case inputSelectionStr == "1":
 		uiAddAccount("")
-	// case inputSelectionStr == "2":
-	// uiDetailAccountMenu("")
+	case inputSelectionStr == "2":
+		var inputAccountSelectionStr string
+		fmt.Print("Elige la cuenta: ")
+		fmt.Scanf("%s", &inputAccountSelectionStr)
+		uiUserMainMenu("La opción elegida no es correcta")
 	case inputSelectionStr == "0":
 		os.Exit(0)
 	default:
@@ -179,7 +182,7 @@ func uiAddAccount(fromError string) {
 
 	fmt.Print("Tipo de cuenta (twitter, facebook, etc): ")
 	fmt.Scanf("%s", &inputAccountType)
-	fmt.Print("Usuarios: ")
+	fmt.Print("Usuario: ")
 	fmt.Scanf("%s", &inputAccountUser)
 	fmt.Print("Contraseña: ")
 	fmt.Scanf("%s", &inputAccountPass)

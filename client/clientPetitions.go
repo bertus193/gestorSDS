@@ -53,15 +53,6 @@ func registroUsuario(client *http.Client, email string, pass string) (*http.Resp
 	return client.PostForm(baseURL+"/usuario/registro", data)
 }
 
-/*func modificarUsuario(client *http.Client, email string, passAnterior string, passNuevo string) (*http.Response, error) {
-	data := url.Values{}
-	data.Set("email", email)
-	data.Set("passAnterior", passAnterior)
-	data.Set("passNuevo", passNuevo)
-
-	return client.PostForm(baseURL+"/usuario/modificar", data)
-}*/
-
 func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error) {
 	data := url.Values{}
 	data.Set("email", userLogin)

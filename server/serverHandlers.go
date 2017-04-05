@@ -47,23 +47,6 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 201, "")
 }
 
-// Modifica los datos de un usuario de la BD
-func modificarUsuario(w http.ResponseWriter, req *http.Request) {
-	// Parseamos el formulario
-	req.ParseForm()
-
-	// Recuperamos los datos
-	email := req.Form.Get("email")
-	passAnterior := req.Form.Get("passAnterior")
-	passNuevo := req.Form.Get("passNuevo")
-	log.Println("modificarUsuario: [" + email + ", " + passAnterior + ", " + passNuevo + "]")
-
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
-	response(w, false, 501, "to-do")
-}
-
 // Añade una cuenta de servicio a un usuario de la BD
 func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario

@@ -29,7 +29,6 @@ func Launch() {
 	mux := http.NewServeMux()
 	mux.Handle("/usuario/login", http.HandlerFunc(loginUsuario))
 	mux.Handle("/usuario/registro", http.HandlerFunc(registroUsuario))
-	mux.Handle("/usuario/modificar", http.HandlerFunc(modificarUsuario))
 	mux.Handle("/cuentas", http.HandlerFunc(listarCuentas))
 	mux.Handle("/cuentas/nueva", http.HandlerFunc(crearCuenta))
 	mux.Handle("/cuentas/modificar", http.HandlerFunc(modificarCuenta))

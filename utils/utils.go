@@ -67,7 +67,7 @@ func Encode64(data []byte) string {
 }
 
 // función para decodificar de string a []bytes (Base64)
-func Ecode64(s string) []byte {
+func Decode64(s string) []byte {
 	b, err := base64.StdEncoding.DecodeString(s) // recupera el formato original
 	chk(err)                                     // comprobamos el error
 	return b                                     // devolvemos los datos originales

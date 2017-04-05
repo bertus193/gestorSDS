@@ -6,13 +6,12 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+
+	"github.com/bertus193/gestorSDS/utils"
 )
 
 var httpClient *http.Client
 var clear map[string]func() //create a map for storing clear funcs
-
-var logguedUserEmail string
-var logguedUserPass string
 
 func init() {
 	clear = make(map[string]func())
@@ -94,8 +93,6 @@ func uiLoginMaster(fromError string) {
 
 	userExists := loginUsuario(httpClient, inputUser, inputPass)
 	if userExists == true {
-		logguedUserEmail = inputUser
-		logguedUserPass = inputPass
 		uiUserMainMenu("")
 	} else {
 		uiInicio("El usuario no existe")
@@ -127,13 +124,14 @@ func uiUserMainMenu(fromError string) {
 	fmt.Printf("# Página de usuario\n\n")
 	fmt.Printf("------ Listado de cuentas ------\n\n")
 	// Recuperamos las cuentas del usuarios
-	cuentas := listarCuentas(httpClient, logguedUserEmail, logguedUserPass)
+	cuentas := listarCuentas(httpClient)
 
 	if cuentas != nil && len(cuentas) != 0 {
 		// Imprimimos los resultados
 		for c := range cuentas {
 			tempAccount := cuentas[c]
-			fmt.Printf("[%s] -> (%s / %s)\n", c, tempAccount.User, tempAccount.Password)
+			tempPass := string(utils.Decrypt(utils.Decode64(tempAccount.Password), keyData))
+			fmt.Printf("[%s] -> (%s / %s)\n", c, tempAccount.User, tempPass)
 		}
 	} else {
 		fmt.Printf("* No tienes ninguna cuenta guardada\n")
@@ -187,11 +185,11 @@ func uiAddAccount(fromError string) {
 	fmt.Print("Contraseña: ")
 	fmt.Scanf("%s", &inputAccountPass)
 
-	crearCuenta(httpClient, logguedUserEmail, logguedUserPass, inputAccountType, inputAccountUser, inputAccountPass)
+	crearCuenta(httpClient, inputAccountType, inputAccountUser, inputAccountPass)
 	uiUserMainMenu("")
 }
 
-func startUi(c *http.Client) {
+func startUI(c *http.Client) {
 	httpClient = c
 	uiInicio("")
 }

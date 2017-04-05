@@ -1,6 +1,6 @@
 # Gestor de contraseñas - SDS
 
-## Comandos 
+## Comandos
 
 ### Lanzar servidor
 `go run app.go server`
@@ -10,3 +10,7 @@
 
 ### Construir proyecto
 `go build app.go`
+
+## Demo
+
+User: sds@sds.com Pass: demo

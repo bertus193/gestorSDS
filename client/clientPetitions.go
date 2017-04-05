@@ -12,6 +12,8 @@ import (
 	"github.com/bertus193/gestorSDS/utils"
 )
 
+var userLogin string
+var keyLogin string
 var keyData []byte
 
 func loginUsuario(client *http.Client, email string, pass string) bool {
@@ -20,9 +22,10 @@ func loginUsuario(client *http.Client, email string, pass string) bool {
 
 	keyClient := sha512.Sum512([]byte(pass))
 	keyData = keyClient[32:64]
-	keyLogin := keyClient[0:31]
+	keyLogin = utils.Encode64(keyClient[0:31])
+	userLogin = email
 
-	data.Set("pass", utils.Encode64(keyLogin))
+	data.Set("pass", keyLogin)
 
 	response, err := client.PostForm(baseURL+"/usuario/login", data)
 	if err != nil {
@@ -59,13 +62,15 @@ func modificarUsuario(client *http.Client, email string, passAnterior string, pa
 	return client.PostForm(baseURL+"/usuario/modificar", data)
 }
 
-func crearCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error) {
+func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error) {
 	data := url.Values{}
-	data.Set("email", email)
-	data.Set("pass", pass)
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
 	data.Set("nombreServicio", nombreServicio)
 	data.Set("usuarioServicio", usuarioServicio)
-	data.Set("passServicio", passServicio)
+
+	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
+	data.Set("passServicio", encryptPassServicio)
 
 	return client.PostForm(baseURL+"/cuentas/nueva", data)
 }
@@ -92,10 +97,10 @@ func eliminarCuenta(client *http.Client, email string, pass string, nombreServic
 	return client.PostForm(baseURL+"/cuentas/eliminar", data)
 }
 
-func listarCuentas(client *http.Client, email string, pass string) map[string]model.Account {
+func listarCuentas(client *http.Client) map[string]model.Account {
 	data := url.Values{}
-	data.Set("email", email)
-	data.Set("pass", pass)
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
 
 	response, err := client.PostForm(baseURL+"/cuentas", data)
 	if err != nil {

@@ -1,1 +1,1 @@
-{"sds@demo.com":{"MasterPassword":"4fcb76fcb3ea68b2f22d84ddc202d77c034bf17b18d3006713879fd3f943755e","MasterPasswordSalt":"N6uz7B2rhGgzNI6TqN5Uz8HYh5xklkv0Sf8Aa1GzyAywNNJvsQN0dMTGL5M+E5ZXY2QLEWQJLHk/WEe9tikNAA==","Accounts":{"facebook":{"User":"sdsFb","Password":"passFacebook"},"twitter":{"User":"sdsTwt","Password":"passTwitter"}}}}
+{"mail@mail.com":{"MasterPassword":"45cafd164fac9a215b0a1402ebea64f6cf11ca6cbd7fffb2cd655e4ac604b493","MasterPasswordSalt":"BxcpUGffnYjgl1bvAcRWltQ1RDIcCDDcJW+rD24TO28ymhE3lUg693Ux150p808dvw7wGwZrQdJJYFA3F1luzQ==","Accounts":{}}}

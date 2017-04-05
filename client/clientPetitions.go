@@ -1,6 +1,7 @@
 package client
 
 import (
+	"crypto/sha512"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -8,12 +9,20 @@ import (
 	"net/url"
 
 	"github.com/bertus193/gestorSDS/model"
+	"github.com/bertus193/gestorSDS/utils"
 )
+
+var keyData []byte
 
 func loginUsuario(client *http.Client, email string, pass string) bool {
 	data := url.Values{}
 	data.Set("email", email)
-	data.Set("pass", pass)
+
+	keyClient := sha512.Sum512([]byte(pass))
+	keyData = keyClient[32:64]
+	keyLogin := keyClient[0:31]
+
+	data.Set("pass", utils.Encode64(keyLogin))
 
 	response, err := client.PostForm(baseURL+"/usuario/login", data)
 	if err != nil {
@@ -32,7 +41,11 @@ func loginUsuario(client *http.Client, email string, pass string) bool {
 func registroUsuario(client *http.Client, email string, pass string) (*http.Response, error) {
 	data := url.Values{}
 	data.Set("email", email)
-	data.Set("pass", pass)
+
+	keyClient := sha512.Sum512([]byte(pass))
+	keyRegister := keyClient[0:31]
+
+	data.Set("pass", utils.Encode64(keyRegister))
 
 	return client.PostForm(baseURL+"/usuario/registro", data)
 }

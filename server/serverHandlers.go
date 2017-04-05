@@ -86,8 +86,29 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 501, "to-do")
 }
 
-// Modifica una cuenta de servicio a un usuario de la BD
-func modificarCuenta(w http.ResponseWriter, req *http.Request) {
+// Modifica usuario de una cuenta (servicio)
+func modificarUsuarioCuenta(w http.ResponseWriter, req *http.Request) {
+	// Parseamos el formulario
+	req.ParseForm()
+
+	// Recuperamos los datos (servicio)
+	email := req.Form.Get("email")
+	pass := req.Form.Get("pass")
+	nombreServicio := req.Form.Get("nombreServicio")
+	usuarioServicio := req.Form.Get("usuarioServicio")
+	passServicio := req.Form.Get("passServicio")
+	log.Println("modificarUsuarioCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
+
+	database.SetAccountUser(email, pass, nombreServicio, usuarioServicio, passServicio)
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+	// Respondemos
+
+	response(w, false, 200, "")
+}
+
+// Modifica contraseña de una cuenta (servicio)
+func modificarPasswordCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
 
@@ -98,7 +119,7 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicioAnterior := req.Form.Get("passServicioAnterior")
 	passServicioNueva := req.Form.Get("passServicioNueva")
-	log.Println("modificarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicioAnterior + ", " + passServicioNueva + "]")
+	log.Println("modificarPasswordCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicioAnterior + ", " + passServicioNueva + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")

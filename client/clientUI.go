@@ -140,8 +140,8 @@ func uiUserMainMenu(fromError string) {
 	fmt.Printf("\n--------------------------------\n\n")
 
 	var inputSelectionStr string
-	fmt.Println("1. Añadir cuenta de cuenta")
-	fmt.Println("2. Ver detalle cuenta de cuenta")
+	fmt.Println("1. Añadir cuenta")
+	fmt.Println("2. Ver detalle cuenta")
 	fmt.Println("3. Modificar mis datos (to-do)")
 	fmt.Println("4. Eliminar mi cuenta (to-do)")
 	fmt.Println("0. Salir")
@@ -173,7 +173,7 @@ func uiAddAccount(fromError string) {
 	var inputAccountType string
 	var inputAccountUser string
 	var inputAccountPass string
-	fmt.Printf("# Añadir cuenta de cuenta\n\n")
+	fmt.Printf("# Añadir cuenta\n\n")
 	if fromError != "" {
 		fmt.Printf("* %s\n\n", fromError)
 	}
@@ -205,11 +205,12 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 		uiUserMainMenu("No existe servicio para dicha selección")
 	}
 	tempPass := string(utils.Decrypt(utils.Decode64(tempAccount.Password), keyData))
-	fmt.Printf("[%s] -> (%s / %s)\n", inputAccountSelectionStr, tempAccount.User, tempPass)
+	fmt.Printf("[%s] -> (%s / %s)\n\n", inputAccountSelectionStr, tempAccount.User, tempPass)
 
 	var inputSelectionStr string
-	fmt.Println("1. Modificar cuenta (to-do)")
-	fmt.Println("2. Borrar cuenta (to-do)")
+	fmt.Println("1. Modificar usuario (to-do)")
+	fmt.Println("2. Modificar contraseña (to-do)")
+	fmt.Println("3. Borrar cuenta (to-do)")
 	fmt.Println("0. Volver")
 
 	if fromError != "" {
@@ -220,12 +221,34 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 
 	switch {
 	case inputSelectionStr == "1":
-		fmt.Printf("to-do")
+		uiModifyAccountUser("", inputAccountSelectionStr)
 	case inputSelectionStr == "2":
+		fmt.Printf("to-do")
+	case inputSelectionStr == "3":
 		fmt.Printf("to-do")
 	case inputSelectionStr == "0":
 		uiUserMainMenu("")
 	default:
 		uiServiceMenu("La opción elegida no es correcta", inputAccountSelectionStr)
 	}
+}
+
+func uiModifyAccountUser(fromError string, nombreServicio string) {
+	clearScreen()
+
+	var inputAccountUser string
+	var inputAccountPassword string
+	fmt.Printf("# Editar usuario de cuenta\n\n")
+	if fromError != "" {
+		fmt.Printf("* %s\n\n", fromError)
+	}
+
+	fmt.Printf("Introduce el nuevo nombre de usuario para el servicio %s: ", nombreServicio)
+	fmt.Scanf("%s", &inputAccountUser)
+
+	fmt.Printf("Introduce la contraseña para el servicio %s: ", nombreServicio)
+	fmt.Scanf("%s", &inputAccountPassword)
+
+	modificarUsuarioDeCuenta(httpClient, inputAccountUser, inputAccountPassword, nombreServicio)
+	uiUserMainMenu("")
 }

@@ -32,7 +32,8 @@ func Launch() {
 	mux.Handle("/usuario/modificar", http.HandlerFunc(modificarUsuario))
 	mux.Handle("/cuentas", http.HandlerFunc(listarCuentas))
 	mux.Handle("/cuentas/nueva", http.HandlerFunc(crearCuenta))
-	mux.Handle("/cuentas/modificar", http.HandlerFunc(modificarCuenta))
+	mux.Handle("/cuentas/modificar/usuario", http.HandlerFunc(modificarUsuarioCuenta))
+	mux.Handle("/cuentas/modificar/password", http.HandlerFunc(modificarPasswordCuenta))
 	mux.Handle("/cuentas/eliminar", http.HandlerFunc(eliminarCuenta))
 	mux.Handle("/cuentas/detalles", http.HandlerFunc(detallesCuenta))
 

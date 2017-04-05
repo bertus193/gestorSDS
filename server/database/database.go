@@ -162,3 +162,15 @@ func GetAll() string {
 
 	return string(j)
 }
+
+// SetAccountUser Modifica cuenta de usuario
+func SetAccount(userEmail string, userPass string, serviceName string, serviceUser string, servicePass string) {
+	// todo: comprobar que el usuario existe antes de asignar
+	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
+}
+
+// deleteAccount Elimina cuenta de usuario
+func DeleteAccount(userEmail string, userPass string, serviceName string) {
+	// todo: comprobar que el usuario existe antes de asignar
+	delete(gestor[userEmail].Accounts, serviceName)
+}

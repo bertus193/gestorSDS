@@ -69,24 +69,25 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 501, "to-do")
 }
 
-// Modifica una cuenta de servicio a un usuario de la BD
+// Modifica usuario de una cuenta (servicio)
 func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
 
-	// Recuperamos los datos
+	// Recuperamos los datos (servicio)
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
-	passServicioAnterior := req.Form.Get("passServicioAnterior")
-	passServicioNueva := req.Form.Get("passServicioNueva")
-	log.Println("modificarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicioAnterior + ", " + passServicioNueva + "]")
+	passServicio := req.Form.Get("passServicio")
+	log.Println("modificarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
 
+	database.SetAccount(email, pass, nombreServicio, usuarioServicio, passServicio)
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 501, "to-do")
+
+	response(w, false, 200, "")
 }
 
 // Elimina una cuenta de servicio a un usuario de la BD
@@ -98,13 +99,13 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
-	usuarioServicio := req.Form.Get("usuarioServicio")
-	log.Println("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + "]")
+	log.Println("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
 
+	database.DeleteAccount(email, pass, nombreServicio)
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 501, "to-do")
+	response(w, false, 200, "")
 }
 
 // Recupera las cuentas de servicio de un usuario de la BD

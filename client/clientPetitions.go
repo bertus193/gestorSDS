@@ -66,24 +66,24 @@ func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio str
 	return client.PostForm(baseURL+"/cuentas/nueva", data)
 }
 
-func modificarCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string, passServicioAnterior string, passServicioNueva string) (*http.Response, error) {
+func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error) {
 	data := url.Values{}
-	data.Set("email", email)
-	data.Set("pass", pass)
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
 	data.Set("nombreServicio", nombreServicio)
 	data.Set("usuarioServicio", usuarioServicio)
-	data.Set("passServicioAnterior", passServicioAnterior)
-	data.Set("passServicioNueva", passServicioAnterior)
+
+	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
+	data.Set("passServicio", encryptPassServicio)
 
 	return client.PostForm(baseURL+"/cuentas/modificar", data)
 }
 
-func eliminarCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string) (*http.Response, error) {
+func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response, error) {
 	data := url.Values{}
-	data.Set("email", email)
-	data.Set("pass", pass)
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
 	data.Set("nombreServicio", nombreServicio)
-	data.Set("usuarioServicio", usuarioServicio)
 
 	return client.PostForm(baseURL+"/cuentas/eliminar", data)
 }

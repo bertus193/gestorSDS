@@ -173,7 +173,7 @@ func uiAddAccount(fromError string) {
 	var inputAccountType string
 	var inputAccountUser string
 	var inputAccountPass string
-	fmt.Printf("# Añadir cuenta de cuenta\n\n")
+	fmt.Printf("# Añadir cuenta\n\n")
 	if fromError != "" {
 		fmt.Printf("* %s\n\n", fromError)
 	}
@@ -213,8 +213,8 @@ func uiServiceMenu(fromError string, accountSelectionStr string) {
 	fmt.Printf("\n--------------------------------\n\n")
 
 	var inputSelectionStr string
-	fmt.Println("1. Modificar cuenta (to-do)")
-	fmt.Println("2. Borrar cuenta (to-do)")
+	fmt.Println("1. Modificar usuario")
+	fmt.Println("2. Borrar cuenta")
 	fmt.Println("0. Volver")
 
 	if fromError != "" {
@@ -225,12 +225,45 @@ func uiServiceMenu(fromError string, accountSelectionStr string) {
 
 	switch {
 	case inputSelectionStr == "1":
-		fmt.Printf("to-do")
+		uiModifyAccount("", accountSelectionStr)
 	case inputSelectionStr == "2":
-		fmt.Printf("to-do")
+		uiDeleteAccount("", accountSelectionStr)
 	case inputSelectionStr == "0":
 		uiUserMainMenu("")
 	default:
 		uiServiceMenu("La opción elegida no es correcta", accountSelectionStr)
 	}
+}
+
+func uiModifyAccount(fromError string, nombreServicio string) {
+	clearScreen()
+
+	var inputAccountUser string
+	var inputAccountPassword string
+	fmt.Printf("# Editar usuario de cuenta\n\n")
+	if fromError != "" {
+		fmt.Printf("* %s\n\n", fromError)
+	}
+
+	fmt.Printf("Introduce el nombre de la cuenta  %s: ", nombreServicio)
+	fmt.Scanf("%s", &inputAccountUser)
+
+	fmt.Printf("Introduce la contraseña la cuenta %s: ", nombreServicio)
+	fmt.Scanf("%s", &inputAccountPassword)
+
+	modificarCuenta(httpClient, inputAccountUser, inputAccountPassword, nombreServicio)
+	uiUserMainMenu("")
+}
+
+func uiDeleteAccount(fromError string, nombreServicio string) {
+
+	var inputDecission string
+	fmt.Print("¿Estás seguro? (si, no): ")
+	fmt.Scanf("%s", &inputDecission)
+
+	if inputDecission == "si" {
+		eliminarCuenta(httpClient, nombreServicio)
+	}
+
+	uiUserMainMenu("")
 }

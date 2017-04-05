@@ -148,7 +148,7 @@ func detallesCuenta(client *http.Client, nombreServicio string) model.Account {
 	return model.Account{}
 }
 
-func modificarUsuarioDeCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error) {
+func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error) {
 	data := url.Values{}
 	data.Set("email", userLogin)
 	data.Set("pass", keyLogin)
@@ -158,5 +158,5 @@ func modificarUsuarioDeCuenta(client *http.Client, usuarioServicio string, passS
 	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
 	data.Set("passServicio", encryptPassServicio)
 
-	return client.PostForm(baseURL+"/cuentas/modificar/usuario", data)
+	return client.PostForm(baseURL+"/cuentas/modificar", data)
 }

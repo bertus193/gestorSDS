@@ -208,8 +208,7 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 	fmt.Printf("[%s] -> (%s / %s)\n\n", inputAccountSelectionStr, tempAccount.User, tempPass)
 
 	var inputSelectionStr string
-	fmt.Println("1. Modificar usuario (to-do)")
-	fmt.Println("2. Modificar contraseña (to-do)")
+	fmt.Println("1. Modificar usuario")
 	fmt.Println("3. Borrar cuenta (to-do)")
 	fmt.Println("0. Volver")
 
@@ -221,10 +220,8 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 
 	switch {
 	case inputSelectionStr == "1":
-		uiModifyAccountUser("", inputAccountSelectionStr)
+		uiModifyAccount("", inputAccountSelectionStr)
 	case inputSelectionStr == "2":
-		fmt.Printf("to-do")
-	case inputSelectionStr == "3":
 		fmt.Printf("to-do")
 	case inputSelectionStr == "0":
 		uiUserMainMenu("")
@@ -233,7 +230,7 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 	}
 }
 
-func uiModifyAccountUser(fromError string, nombreServicio string) {
+func uiModifyAccount(fromError string, nombreServicio string) {
 	clearScreen()
 
 	var inputAccountUser string
@@ -243,12 +240,12 @@ func uiModifyAccountUser(fromError string, nombreServicio string) {
 		fmt.Printf("* %s\n\n", fromError)
 	}
 
-	fmt.Printf("Introduce el nuevo nombre de usuario para el servicio %s: ", nombreServicio)
+	fmt.Printf("Introduce el nombre de la cuenta  %s: ", nombreServicio)
 	fmt.Scanf("%s", &inputAccountUser)
 
-	fmt.Printf("Introduce la contraseña para el servicio %s: ", nombreServicio)
+	fmt.Printf("Introduce la contraseña la cuenta %s: ", nombreServicio)
 	fmt.Scanf("%s", &inputAccountPassword)
 
-	modificarUsuarioDeCuenta(httpClient, inputAccountUser, inputAccountPassword, nombreServicio)
+	modificarCuenta(httpClient, inputAccountUser, inputAccountPassword, nombreServicio)
 	uiUserMainMenu("")
 }

@@ -163,8 +163,8 @@ func GetAll() string {
 	return string(j)
 }
 
-// SetAccountUser Modifica nombre usuario servicio de cuent
-func SetAccountUser(userEmail string, userPass string, serviceName string, serviceUser string, servicePass string) {
+// SetAccountUser Modifica cuenta de usuario
+func SetAccount(userEmail string, userPass string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
 
 	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}

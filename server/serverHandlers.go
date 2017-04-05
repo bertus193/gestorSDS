@@ -150,11 +150,11 @@ func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
-	usuarioServicio := req.Form.Get("usuarioServicio")
-	log.Println("detallesCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + "]")
+	log.Println("detallesCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
+	accountInfo := database.GetJSONAccountFromUser(email, pass, nombreServicio)
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 501, "to-do")
+	response(w, false, 200, accountInfo)
 }

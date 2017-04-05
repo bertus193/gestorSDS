@@ -53,14 +53,14 @@ func registroUsuario(client *http.Client, email string, pass string) (*http.Resp
 	return client.PostForm(baseURL+"/usuario/registro", data)
 }
 
-func modificarUsuario(client *http.Client, email string, passAnterior string, passNuevo string) (*http.Response, error) {
+/*func modificarUsuario(client *http.Client, email string, passAnterior string, passNuevo string) (*http.Response, error) {
 	data := url.Values{}
 	data.Set("email", email)
 	data.Set("passAnterior", passAnterior)
 	data.Set("passNuevo", passNuevo)
 
 	return client.PostForm(baseURL+"/usuario/modificar", data)
-}
+}*/
 
 func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error) {
 	data := url.Values{}
@@ -128,12 +128,34 @@ func listarCuentas(client *http.Client) map[string]model.Account {
 	return nil
 }
 
-func detallesCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string) (*http.Response, error) {
+func detallesCuenta(client *http.Client, nombreServicio string) model.Account {
 	data := url.Values{}
-	data.Set("email", email)
-	data.Set("pass", pass)
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
 	data.Set("nombreServicio", nombreServicio)
-	data.Set("usuarioServicio", usuarioServicio)
 
-	return client.PostForm(baseURL+"/cuentas/detalles", data)
+	response, err := client.PostForm(baseURL+"/cuentas/detalles", data)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		// Cerramos la conexión
+		defer response.Body.Close()
+
+		// Leemos la respuesta
+		contents, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Recuperamos el código http
+		// fmt.Println(response.StatusCode)
+
+		// Recuperamos el objeto del mensaje origianl
+		result := model.Account{}
+		if err := json.Unmarshal(contents, &result); err == nil {
+			return result
+		}
+	}
+
+	return model.Account{}
 }

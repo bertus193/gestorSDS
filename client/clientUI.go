@@ -140,8 +140,8 @@ func uiUserMainMenu(fromError string) {
 	fmt.Printf("\n--------------------------------\n\n")
 
 	var inputSelectionStr string
-	fmt.Println("1. Añadir cuenta de servicio")
-	fmt.Println("2. Ver detalle cuenta de servicio (to-do)")
+	fmt.Println("1. Añadir cuenta de cuenta")
+	fmt.Println("2. Ver detalle cuenta de cuenta")
 	fmt.Println("3. Modificar mis datos (to-do)")
 	fmt.Println("4. Eliminar mi cuenta (to-do)")
 	fmt.Println("0. Salir")
@@ -159,7 +159,7 @@ func uiUserMainMenu(fromError string) {
 		var inputAccountSelectionStr string
 		fmt.Print("Elige la cuenta: ")
 		fmt.Scanf("%s", &inputAccountSelectionStr)
-		uiUserMainMenu("La opción elegida no es correcta")
+		uiServiceMenu("", inputAccountSelectionStr)
 	case inputSelectionStr == "0":
 		os.Exit(0)
 	default:
@@ -173,7 +173,7 @@ func uiAddAccount(fromError string) {
 	var inputAccountType string
 	var inputAccountUser string
 	var inputAccountPass string
-	fmt.Printf("# Añadir cuenta de servicio\n\n")
+	fmt.Printf("# Añadir cuenta de cuenta\n\n")
 	if fromError != "" {
 		fmt.Printf("* %s\n\n", fromError)
 	}
@@ -192,4 +192,40 @@ func uiAddAccount(fromError string) {
 func startUI(c *http.Client) {
 	httpClient = c
 	uiInicio("")
+}
+
+func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
+	clearScreen()
+
+	fmt.Printf("# Detalles de cuenta\n\n")
+
+	tempAccount := detallesCuenta(httpClient, inputAccountSelectionStr)
+
+	if len(tempAccount.User) == 0 {
+		uiUserMainMenu("No existe servicio para dicha selección")
+	}
+	tempPass := string(utils.Decrypt(utils.Decode64(tempAccount.Password), keyData))
+	fmt.Printf("[%s] -> (%s / %s)\n", inputAccountSelectionStr, tempAccount.User, tempPass)
+
+	var inputSelectionStr string
+	fmt.Println("1. Modificar cuenta (to-do)")
+	fmt.Println("2. Borrar cuenta (to-do)")
+	fmt.Println("0. Volver")
+
+	if fromError != "" {
+		fmt.Printf("\n* %s", fromError)
+	}
+	fmt.Printf("\nSeleccione una opción: ")
+	fmt.Scanf("%s", &inputSelectionStr)
+
+	switch {
+	case inputSelectionStr == "1":
+		fmt.Printf("to-do")
+	case inputSelectionStr == "2":
+		fmt.Printf("to-do")
+	case inputSelectionStr == "0":
+		uiUserMainMenu("")
+	default:
+		uiServiceMenu("La opción elegida no es correcta", inputAccountSelectionStr)
+	}
 }

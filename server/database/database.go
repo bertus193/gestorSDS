@@ -138,6 +138,20 @@ func GetJSONAllAccountsFromUser(usuario string, pass string) string {
 	return string(j)
 }
 
+// GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario
+func GetJSONAccountFromUser(usuario string, pass string, nombreServicio string) string {
+	userAccount := gestor[usuario].Accounts[nombreServicio]
+	// todo: comprobar y validar contraseña
+
+	j, err := json.Marshal(userAccount)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return string(j)
+}
+
 // GetAll (Debug) Devuelve un string json con todos los datos
 func GetAll() string {
 	j, err := json.Marshal(gestor)

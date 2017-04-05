@@ -209,7 +209,7 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 
 	var inputSelectionStr string
 	fmt.Println("1. Modificar usuario")
-	fmt.Println("3. Borrar cuenta (to-do)")
+	fmt.Println("2. Borrar cuenta")
 	fmt.Println("0. Volver")
 
 	if fromError != "" {
@@ -222,7 +222,7 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 	case inputSelectionStr == "1":
 		uiModifyAccount("", inputAccountSelectionStr)
 	case inputSelectionStr == "2":
-		fmt.Printf("to-do")
+		uiDeleteAccount("", inputAccountSelectionStr)
 	case inputSelectionStr == "0":
 		uiUserMainMenu("")
 	default:
@@ -247,5 +247,18 @@ func uiModifyAccount(fromError string, nombreServicio string) {
 	fmt.Scanf("%s", &inputAccountPassword)
 
 	modificarCuenta(httpClient, inputAccountUser, inputAccountPassword, nombreServicio)
+	uiUserMainMenu("")
+}
+
+func uiDeleteAccount(fromError string, nombreServicio string) {
+
+	var inputDecission string
+	fmt.Print("¿Estás seguro? (si, no): ")
+	fmt.Scanf("%s", &inputDecission)
+
+	if inputDecission == "si" {
+		eliminarCuenta(httpClient, nombreServicio)
+	}
+
 	uiUserMainMenu("")
 }

@@ -107,26 +107,6 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 200, "")
 }
 
-// Modifica contraseña de una cuenta (servicio)
-func modificarPasswordCuenta(w http.ResponseWriter, req *http.Request) {
-	// Parseamos el formulario
-	req.ParseForm()
-
-	// Recuperamos los datos
-	email := req.Form.Get("email")
-	pass := req.Form.Get("pass")
-	nombreServicio := req.Form.Get("nombreServicio")
-	usuarioServicio := req.Form.Get("usuarioServicio")
-	passServicioAnterior := req.Form.Get("passServicioAnterior")
-	passServicioNueva := req.Form.Get("passServicioNueva")
-	log.Println("modificarPasswordCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicioAnterior + ", " + passServicioNueva + "]")
-
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
-	response(w, false, 501, "to-do")
-}
-
 // Elimina una cuenta de servicio a un usuario de la BD
 func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
@@ -136,13 +116,13 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
-	usuarioServicio := req.Form.Get("usuarioServicio")
-	log.Println("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + "]")
+	log.Println("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
 
+	database.DeleteAccount(email, pass, nombreServicio)
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 501, "to-do")
+	response(w, false, 200, "")
 }
 
 // Recupera las cuentas de servicio de un usuario de la BD

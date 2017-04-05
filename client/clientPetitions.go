@@ -53,15 +53,6 @@ func registroUsuario(client *http.Client, email string, pass string) (*http.Resp
 	return client.PostForm(baseURL+"/usuario/registro", data)
 }
 
-/*func modificarUsuario(client *http.Client, email string, passAnterior string, passNuevo string) (*http.Response, error) {
-	data := url.Values{}
-	data.Set("email", email)
-	data.Set("passAnterior", passAnterior)
-	data.Set("passNuevo", passNuevo)
-
-	return client.PostForm(baseURL+"/usuario/modificar", data)
-}*/
-
 func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error) {
 	data := url.Values{}
 	data.Set("email", userLogin)
@@ -75,12 +66,24 @@ func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio str
 	return client.PostForm(baseURL+"/cuentas/nueva", data)
 }
 
-func eliminarCuenta(client *http.Client, email string, pass string, nombreServicio string, usuarioServicio string) (*http.Response, error) {
+func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error) {
 	data := url.Values{}
-	data.Set("email", email)
-	data.Set("pass", pass)
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
 	data.Set("nombreServicio", nombreServicio)
 	data.Set("usuarioServicio", usuarioServicio)
+
+	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
+	data.Set("passServicio", encryptPassServicio)
+
+	return client.PostForm(baseURL+"/cuentas/modificar", data)
+}
+
+func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
+	data.Set("nombreServicio", nombreServicio)
 
 	return client.PostForm(baseURL+"/cuentas/eliminar", data)
 }
@@ -146,17 +149,4 @@ func detallesCuenta(client *http.Client, nombreServicio string) model.Account {
 	}
 
 	return model.Account{}
-}
-
-func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error) {
-	data := url.Values{}
-	data.Set("email", userLogin)
-	data.Set("pass", keyLogin)
-	data.Set("nombreServicio", nombreServicio)
-	data.Set("usuarioServicio", usuarioServicio)
-
-	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
-	data.Set("passServicio", encryptPassServicio)
-
-	return client.PostForm(baseURL+"/cuentas/modificar", data)
 }

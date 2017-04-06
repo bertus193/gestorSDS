@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/bertus193/gestorSDS/model"
 	"github.com/bertus193/gestorSDS/utils"
 )
 
@@ -141,10 +142,10 @@ func uiUserMainMenu(fromError string) {
 	fmt.Printf("\n\n--------------------------------\n\n")
 
 	var inputSelectionStr string
+
 	fmt.Println("1. Añadir cuenta")
 	fmt.Println("2. Ver detalle cuenta")
-	fmt.Println("3. Modificar mis datos (to-do)")
-	fmt.Println("4. Eliminar mi usuario")
+	fmt.Println("3. Eliminar mi usuario")
 	fmt.Println("0. Salir")
 
 	if fromError != "" {
@@ -161,7 +162,7 @@ func uiUserMainMenu(fromError string) {
 		fmt.Print("Elige la cuenta: ")
 		fmt.Scanf("%s", &inputAccountSelectionStr)
 		uiServiceMenu("", inputAccountSelectionStr)
-	case inputSelectionStr == "4":
+	case inputSelectionStr == "3":
 		uiDeleteUser("")
 	case inputSelectionStr == "0":
 		os.Exit(0)
@@ -197,18 +198,23 @@ func startUI(c *http.Client) {
 	uiInicio("")
 }
 
-func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
+func uiServiceMenu(fromError string, accountSelectionStr string) {
 	clearScreen()
 
-	fmt.Printf("# Detalles de cuenta\n\n")
+	fmt.Printf("# Detalles de cuenta [%s]\n\n", accountSelectionStr)
 
-	tempAccount := detallesCuenta(httpClient, inputAccountSelectionStr)
-
-	if len(tempAccount.User) == 0 {
-		uiUserMainMenu("No existe servicio para dicha selección")
+	fmt.Printf("--------------------------------\n\n")
+	accountDetails := detallesCuenta(httpClient, accountSelectionStr)
+	// Si los detalles de la cuenta están vacios
+	if (model.Account{}) == accountDetails {
+		// Volvemos al menú del usuario
+		uiUserMainMenu("No existe la cuenta seleccionada")
 	}
-	tempPass := string(utils.Decrypt(utils.Decode64(tempAccount.Password), keyData))
-	fmt.Printf("[%s] -> (%s / %s)\n\n", inputAccountSelectionStr, tempAccount.User, tempPass)
+	// Desencriptamos la contraseña para mostrarla
+	plainPass := string(utils.Decrypt(utils.Decode64(accountDetails.Password), keyData))
+	// Mostramos los detalles de la cuenta
+	fmt.Printf("[%s] -> (%s / %s)\n", accountSelectionStr, accountDetails.User, plainPass)
+	fmt.Printf("\n--------------------------------\n\n")
 
 	var inputSelectionStr string
 	fmt.Println("1. Modificar usuario")
@@ -223,13 +229,13 @@ func uiServiceMenu(fromError string, inputAccountSelectionStr string) {
 
 	switch {
 	case inputSelectionStr == "1":
-		uiModifyAccount("", inputAccountSelectionStr)
+		uiModifyAccount("", accountSelectionStr)
 	case inputSelectionStr == "2":
-		uiDeleteAccount("", inputAccountSelectionStr)
+		uiDeleteAccount("", accountSelectionStr)
 	case inputSelectionStr == "0":
 		uiUserMainMenu("")
 	default:
-		uiServiceMenu("La opción elegida no es correcta", inputAccountSelectionStr)
+		uiServiceMenu("La opción elegida no es correcta", accountSelectionStr)
 	}
 }
 

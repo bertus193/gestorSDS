@@ -129,21 +129,22 @@ func uiUserMainMenu(fromError string) {
 	if cuentas != nil && len(cuentas) != 0 {
 		// Imprimimos los resultados
 		for c := range cuentas {
-			tempAccount := cuentas[c]
-			tempPass := string(utils.Decrypt(utils.Decode64(tempAccount.Password), keyData))
-			fmt.Printf("[%s] -> (%s / %s)\n", c, tempAccount.User, tempPass)
+			//tempAccount := cuentas[c]
+			//tempPass := string(utils.Decrypt(utils.Decode64(tempAccount.Password), keyData))
+			//fmt.Printf("[%s] -> (%s / %s)\n", c, tempAccount.User, tempPass)
+			fmt.Printf("[%s] ", c)
 		}
 	} else {
 		fmt.Printf("* No tienes ninguna cuenta guardada\n")
 	}
 
-	fmt.Printf("\n--------------------------------\n\n")
+	fmt.Printf("\n\n--------------------------------\n\n")
 
 	var inputSelectionStr string
 	fmt.Println("1. Añadir cuenta")
 	fmt.Println("2. Ver detalle cuenta")
 	fmt.Println("3. Modificar mis datos (to-do)")
-	fmt.Println("4. Eliminar mi cuenta (to-do)")
+	fmt.Println("4. Eliminar mi usuario")
 	fmt.Println("0. Salir")
 
 	if fromError != "" {
@@ -160,6 +161,8 @@ func uiUserMainMenu(fromError string) {
 		fmt.Print("Elige la cuenta: ")
 		fmt.Scanf("%s", &inputAccountSelectionStr)
 		uiServiceMenu("", inputAccountSelectionStr)
+	case inputSelectionStr == "4":
+		uiDeleteUser("")
 	case inputSelectionStr == "0":
 		os.Exit(0)
 	default:
@@ -261,4 +264,17 @@ func uiDeleteAccount(fromError string, nombreServicio string) {
 	}
 
 	uiUserMainMenu("")
+}
+
+func uiDeleteUser(fromError string) {
+
+	var inputDecission string
+	fmt.Print("¿Estás seguro? (si, no): ")
+	fmt.Scanf("%s", &inputDecission)
+
+	if inputDecission == "si" {
+		eliminarUsuario(httpClient)
+	}
+
+	uiInicio("")
 }

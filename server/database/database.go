@@ -174,3 +174,9 @@ func DeleteAccount(userEmail string, userPass string, serviceName string) {
 	// todo: comprobar que el usuario existe antes de asignar
 	delete(gestor[userEmail].Accounts, serviceName)
 }
+
+// deleteAccount Elimina cuenta de usuario
+func DeleteUser(userEmail string, userPass string) {
+	// todo: comprobar que el usuario existe antes de asignar
+	delete(gestor, userEmail)
+}

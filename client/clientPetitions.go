@@ -66,6 +66,14 @@ func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio str
 	return client.PostForm(baseURL+"/cuentas/nueva", data)
 }
 
+func eliminarUsuario(client *http.Client) (*http.Response, error) {
+	data := url.Values{}
+	data.Set("email", userLogin)
+	data.Set("pass", keyLogin)
+
+	return client.PostForm(baseURL+"/usuario/eliminar", data)
+}
+
 func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error) {
 	data := url.Values{}
 	data.Set("email", userLogin)

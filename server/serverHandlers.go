@@ -64,6 +64,23 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	response(w, false, 501, "to-do")
 }
 
+// Elimina un usuario
+func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
+	// Parseamos el formulario
+	req.ParseForm()
+
+	// Recuperamos los datos
+	email := req.Form.Get("email")
+	pass := req.Form.Get("pass")
+	log.Println("eliminarUsuario: [" + email + ", " + pass + "]")
+
+	database.DeleteUser(email, pass)
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+	// Respondemos
+	response(w, false, 200, "")
+}
+
 // Añade una cuenta de servicio a un usuario de la BD
 func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario

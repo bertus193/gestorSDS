@@ -3,9 +3,12 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/bertus193/gestorSDS/server/database"
 )
+
+var session = make(map[string]time.Time)
 
 // Comprueba si existe un usuario en la BD
 func loginUsuario(w http.ResponseWriter, req *http.Request) {
@@ -14,7 +17,9 @@ func loginUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
+
 	log.Println("loginUsuario: [" + email + ", " + pass + "]")
 
 	userExists := database.ExistsUser(email, pass)
@@ -36,6 +41,7 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
 	log.Println("registroUsuario: [" + email + ", " + pass + "]")
 
@@ -54,6 +60,7 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	passAnterior := req.Form.Get("passAnterior")
 	passNuevo := req.Form.Get("passNuevo")
 	log.Println("modificarUsuario: [" + email + ", " + passAnterior + ", " + passNuevo + "]")
@@ -71,6 +78,7 @@ func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
 	log.Println("eliminarUsuario: [" + email + ", " + pass + "]")
 
@@ -88,6 +96,7 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
@@ -110,6 +119,7 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos (servicio)
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
@@ -131,6 +141,7 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	log.Println("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
@@ -149,6 +160,7 @@ func listarCuentas(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
 	log.Println("listarCuentas: [" + email + ", " + pass + "]")
 
@@ -166,6 +178,7 @@ func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
+	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	log.Println("detallesCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
@@ -175,4 +188,22 @@ func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
 	response(w, false, 200, accountInfo)
+}
+
+func updateSession(email string) {
+	if session[email].IsZero() {
+		session[email] = time.Now()
+	} else {
+		duration := time.Now().Sub(session[email])
+		if duration.Seconds() > 20 {
+			log.Println("El usuario " + email + " ha superado el límite de sesión")
+		} else {
+			session[email] = time.Now()
+		}
+	}
+
+}
+
+func ClearSession(email string) {
+	//session[email] = nil
 }

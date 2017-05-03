@@ -284,3 +284,8 @@ func uiDeleteUser(fromError string) {
 
 	uiInicio("")
 }
+
+// Logout externo
+func UIlogout() {
+	os.Exit(0)
+}

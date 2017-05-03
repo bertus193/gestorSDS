@@ -1,12 +1,20 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/bertus193/gestorSDS/config"
 	"github.com/bertus193/gestorSDS/server/database"
 )
+
+// función para escribir una respuesta del servidor
+func response(w http.ResponseWriter, code int, msgJSON string) {
+	w.WriteHeader(code)
+	fmt.Fprintf(w, msgJSON)
+}
 
 var session = make(map[string]time.Time)
 
@@ -17,8 +25,9 @@ func loginUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	updateSession(email)
 	pass := req.Form.Get("pass")
+
+	startSession(email)
 
 	log.Println("loginUsuario: [" + email + ", " + pass + "]")
 
@@ -28,9 +37,9 @@ func loginUsuario(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
 	if userExists {
-		response(w, false, 200, "")
+		response(w, 200, "")
 	} else {
-		response(w, false, 500, "")
+		response(w, 500, "")
 	}
 }
 
@@ -50,7 +59,7 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 201, "")
+	response(w, 201, "")
 }
 
 // Modifica los datos de un usuario de la BD
@@ -68,7 +77,7 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 501, "to-do")
+	response(w, 501, "to-do")
 }
 
 // Elimina un usuario
@@ -86,7 +95,7 @@ func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 200, "")
+	response(w, 200, "")
 }
 
 // Añade una cuenta de servicio a un usuario de la BD
@@ -109,7 +118,7 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 501, "to-do")
+	response(w, 501, "to-do")
 }
 
 // Modifica usuario de una cuenta (servicio)
@@ -131,7 +140,7 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
 
-	response(w, false, 200, "")
+	response(w, 200, "")
 }
 
 // Elimina una cuenta de servicio a un usuario de la BD
@@ -150,7 +159,7 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, false, 200, "")
+	response(w, 200, "")
 }
 
 // Recupera las cuentas de servicio de un usuario de la BD
@@ -160,15 +169,20 @@ func listarCuentas(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	updateSession(email)
 	pass := req.Form.Get("pass")
 	log.Println("listarCuentas: [" + email + ", " + pass + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
-	response(w, false, 201, database.GetJSONAllAccountsFromUser(email, pass))
 
+	// Respondemos
+	if updateSession(email) {
+		// La sesión sigue abierta
+		response(w, 200, database.GetJSONAllAccountsFromUser(email, pass))
+	} else {
+		// La sesión ha caducado
+		response(w, 401, "")
+	}
 }
 
 // Recupera los detalles de una cuenta de servicio a un usuario de la BD
@@ -178,30 +192,47 @@ func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	log.Println("detallesCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
+
 	accountInfo := database.GetJSONAccountFromUser(email, pass, nombreServicio)
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
+
 	// Respondemos
-	response(w, false, 200, accountInfo)
+	if updateSession(email) {
+		// La sesión sigue abierta
+		response(w, 200, accountInfo)
+	} else {
+		// La sesión ha caducado
+		response(w, 401, "")
+	}
 }
 
-func updateSession(email string) {
+func updateSession(email string) bool {
+
+	isOpen := true
+	// Si no existe sesion con el usuario
 	if session[email].IsZero() {
 		session[email] = time.Now()
 	} else {
+
 		duration := time.Now().Sub(session[email])
-		if duration.Seconds() > 20 {
-			log.Println("El usuario " + email + " ha superado el límite de sesión")
+		// Si la sesion supera el tiempo máximo
+		if duration.Seconds() > config.MaxTimeSession {
+			isOpen = false
 		} else {
 			session[email] = time.Now()
 		}
 	}
 
+	return isOpen
+}
+
+func startSession(email string) {
+	delete(session, email)
 }
 
 func ClearSession(email string) {

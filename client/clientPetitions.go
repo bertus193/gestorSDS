@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+
+	"fmt"
 
 	"github.com/bertus193/gestorSDS/model"
 	"github.com/bertus193/gestorSDS/utils"
@@ -29,7 +32,8 @@ func loginUsuario(client *http.Client, email string, pass string) bool {
 
 	response, err := client.PostForm(baseURL+"/usuario/login", data)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("* No se ha podido comunicar con el servidor")
+		os.Exit(0)
 	} else {
 		// Cerramos la conexión
 		defer response.Body.Close()
@@ -96,7 +100,7 @@ func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response,
 	return client.PostForm(baseURL+"/cuentas/eliminar", data)
 }
 
-func listarCuentas(client *http.Client) map[string]model.Account {
+func listarCuentas(client *http.Client) (map[string]model.Account, string) {
 	data := url.Values{}
 	data.Set("email", userLogin)
 	data.Set("pass", keyLogin)
@@ -114,20 +118,26 @@ func listarCuentas(client *http.Client) map[string]model.Account {
 			log.Fatal(err)
 		}
 
+		result := make(map[string]model.Account)
+
 		// Recuperamos el código http
 		// fmt.Println(response.StatusCode)
 
+		//to-do comprobar todos los codigos de error
+		if response.StatusCode != 200 {
+			return result, "errorSesion"
+		}
+
 		// Recuperamos el objeto del mensaje origianl
-		result := make(map[string]model.Account)
 		if err := json.Unmarshal(contents, &result); err == nil {
-			return result
+			return result, ""
 		}
 	}
 
-	return nil
+	return nil, "error"
 }
 
-func detallesCuenta(client *http.Client, nombreServicio string) model.Account {
+func detallesCuenta(client *http.Client, nombreServicio string) (model.Account, string) {
 	data := url.Values{}
 	data.Set("email", userLogin)
 	data.Set("pass", keyLogin)
@@ -146,15 +156,21 @@ func detallesCuenta(client *http.Client, nombreServicio string) model.Account {
 			log.Fatal(err)
 		}
 
+		result := model.Account{}
+
 		// Recuperamos el código http
 		// fmt.Println(response.StatusCode)
 
+		//to-do comprobar todos los codigos de error
+		if response.StatusCode != 200 {
+			return result, "errorSesion"
+		}
+
 		// Recuperamos el objeto del mensaje origianl
-		result := model.Account{}
 		if err := json.Unmarshal(contents, &result); err == nil {
-			return result
+			return result, ""
 		}
 	}
 
-	return model.Account{}
+	return model.Account{}, "error"
 }

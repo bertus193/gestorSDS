@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,12 +11,6 @@ import (
 	"github.com/bertus193/gestorSDS/config"
 	"github.com/bertus193/gestorSDS/server/database"
 )
-
-// función para escribir una respuesta del servidor
-func response(w http.ResponseWriter, ok bool, code int, msgJSON string) {
-	w.WriteHeader(code)
-	fmt.Fprintf(w, msgJSON)
-}
 
 // Launch lanza el servidor
 func Launch() {

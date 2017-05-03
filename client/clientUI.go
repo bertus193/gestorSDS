@@ -14,6 +14,15 @@ import (
 var httpClient *http.Client
 var clear map[string]func() //create a map for storing clear funcs
 
+func checkErrors(errStr string) {
+	switch errStr {
+	case "errorSesion":
+		uiLoginMaster("La sesión ha caducado")
+	case "error":
+		fmt.Printf("* Ha ocurrido un error\n")
+	}
+}
+
 func init() {
 	clear = make(map[string]func())
 	clear["linux"] = func() {
@@ -122,10 +131,13 @@ func uiRegistroMaster(fromError string) {
 func uiUserMainMenu(fromError string) {
 	clearScreen()
 
+	// Recuperamos las cuentas del usuarios
+	cuentas, errStr := listarCuentas(httpClient)
+
+	checkErrors(errStr)
+
 	fmt.Printf("# Página de usuario\n\n")
 	fmt.Printf("------ Listado de cuentas ------\n\n")
-	// Recuperamos las cuentas del usuarios
-	cuentas := listarCuentas(httpClient)
 
 	if cuentas != nil && len(cuentas) != 0 {
 		// Imprimimos los resultados
@@ -201,10 +213,11 @@ func startUI(c *http.Client) {
 func uiServiceMenu(fromError string, accountSelectionStr string) {
 	clearScreen()
 
-	fmt.Printf("# Detalles de cuenta [%s]\n\n", accountSelectionStr)
+	accountDetails, errStr := detallesCuenta(httpClient, accountSelectionStr)
+	checkErrors(errStr)
 
+	fmt.Printf("# Detalles de cuenta [%s]\n\n", accountSelectionStr)
 	fmt.Printf("--------------------------------\n\n")
-	accountDetails := detallesCuenta(httpClient, accountSelectionStr)
 	// Si los detalles de la cuenta están vacios
 	if (model.Account{}) == accountDetails {
 		// Volvemos al menú del usuario

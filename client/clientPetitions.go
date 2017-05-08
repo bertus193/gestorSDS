@@ -57,7 +57,7 @@ func registroUsuario(client *http.Client, email string, pass string) (*http.Resp
 	return client.PostForm(baseURL+"/usuario/registro", data)
 }
 
-func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error) {
+func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error, string) {
 	data := url.Values{}
 	data.Set("email", userLogin)
 	data.Set("pass", keyLogin)
@@ -67,18 +67,42 @@ func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio str
 	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
 	data.Set("passServicio", encryptPassServicio)
 
-	return client.PostForm(baseURL+"/cuentas/nueva", data)
+	response, err := client.PostForm(baseURL+"/cuentas/nueva", data)
+
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		// Cerramos la conexión
+		defer response.Body.Close()
+	}
+	if response.StatusCode != 200 {
+		return response, err, "errorSesion"
+	}
+
+	return response, err, ""
 }
 
-func eliminarUsuario(client *http.Client) (*http.Response, error) {
+func eliminarUsuario(client *http.Client) (*http.Response, error, string) {
 	data := url.Values{}
 	data.Set("email", userLogin)
 	data.Set("pass", keyLogin)
 
-	return client.PostForm(baseURL+"/usuario/eliminar", data)
+	response, err := client.PostForm(baseURL+"/usuario/eliminar", data)
+
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		// Cerramos la conexión
+		defer response.Body.Close()
+	}
+	if response.StatusCode != 200 {
+		return response, err, "errorSesion"
+	}
+
+	return response, err, ""
 }
 
-func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error) {
+func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error, string) {
 	data := url.Values{}
 	data.Set("email", userLogin)
 	data.Set("pass", keyLogin)
@@ -88,16 +112,40 @@ func modificarCuenta(client *http.Client, usuarioServicio string, passServicio s
 	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
 	data.Set("passServicio", encryptPassServicio)
 
-	return client.PostForm(baseURL+"/cuentas/modificar", data)
+	response, err := client.PostForm(baseURL+"/cuentas/modificar", data)
+
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		// Cerramos la conexión
+		defer response.Body.Close()
+	}
+	if response.StatusCode != 200 {
+		return response, err, "errorSesion"
+	}
+
+	return response, err, ""
 }
 
-func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response, error) {
+func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response, string) {
 	data := url.Values{}
 	data.Set("email", userLogin)
 	data.Set("pass", keyLogin)
 	data.Set("nombreServicio", nombreServicio)
 
-	return client.PostForm(baseURL+"/cuentas/eliminar", data)
+	response, err := client.PostForm(baseURL+"/cuentas/eliminar", data)
+
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		// Cerramos la conexión
+		defer response.Body.Close()
+	}
+	if response.StatusCode != 200 {
+		return response, "errorSesion"
+	}
+
+	return response, ""
 }
 
 func listarCuentas(client *http.Client) (map[string]model.Account, string) {

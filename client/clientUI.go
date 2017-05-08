@@ -292,7 +292,8 @@ func uiDeleteUser(fromError string) {
 	fmt.Scanf("%s", &inputDecission)
 
 	if inputDecission == "si" {
-		eliminarUsuario(httpClient)
+		_, _, errStr := eliminarUsuario(httpClient)
+		checkErrors(errStr)
 	}
 
 	uiInicio("")

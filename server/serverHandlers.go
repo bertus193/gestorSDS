@@ -50,7 +50,6 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	updateSession(email)
 	pass := req.Form.Get("pass")
 	log.Println("registroUsuario: [" + email + ", " + pass + "]")
 
@@ -69,15 +68,20 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	updateSession(email)
 	passAnterior := req.Form.Get("passAnterior")
 	passNuevo := req.Form.Get("passNuevo")
 	log.Println("modificarUsuario: [" + email + ", " + passAnterior + ", " + passNuevo + "]")
 
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
-	response(w, 501, "to-do")
+	if !updateSession(email) {
+		// La sesión sigue abierta
+		response(w, 401, "")
+	} else {
+		// Cabecera estándar
+		w.Header().Set("Content-Type", "text/plain")
+		// Respondemos
+		response(w, 501, "to-do")
+
+	}
 }
 
 // Elimina un usuario
@@ -87,15 +91,20 @@ func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	updateSession(email)
 	pass := req.Form.Get("pass")
 	log.Println("eliminarUsuario: [" + email + ", " + pass + "]")
 
-	database.DeleteUser(email, pass)
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
-	response(w, 200, "")
+	if !updateSession(email) {
+		// La sesión sigue abierta
+		response(w, 401, "")
+	} else {
+		database.DeleteUser(email, pass)
+		// Cabecera estándar
+		w.Header().Set("Content-Type", "text/plain")
+		// Respondemos
+		response(w, 200, "")
+
+	}
 }
 
 // Añade una cuenta de servicio a un usuario de la BD
@@ -105,20 +114,25 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicio := req.Form.Get("passServicio")
 	log.Println("crearCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
 
-	// Añadimos el servicio a la BD
-	database.AddAccountToUser(email, pass, nombreServicio, usuarioServicio, passServicio)
+	if !updateSession(email) {
+		// La sesión sigue abierta
+		response(w, 401, "")
+	} else {
+		// Añadimos el servicio a la BD
+		database.AddAccountToUser(email, pass, nombreServicio, usuarioServicio, passServicio)
 
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
-	response(w, 501, "to-do")
+		// Cabecera estándar
+		w.Header().Set("Content-Type", "text/plain")
+		// Respondemos
+		response(w, 501, "to-do")
+
+	}
 }
 
 // Modifica usuario de una cuenta (servicio)
@@ -128,19 +142,24 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos (servicio)
 	email := req.Form.Get("email")
-	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicio := req.Form.Get("passServicio")
 	log.Println("modificarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
 
-	database.SetAccount(email, pass, nombreServicio, usuarioServicio, passServicio)
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
+	if !updateSession(email) {
+		// La sesión sigue abierta
+		response(w, 401, "")
+	} else {
 
-	response(w, 200, "")
+		database.SetAccount(email, pass, nombreServicio, usuarioServicio, passServicio)
+		// Cabecera estándar
+		w.Header().Set("Content-Type", "text/plain")
+		// Respondemos
+
+		response(w, 200, "")
+	}
 }
 
 // Elimina una cuenta de servicio a un usuario de la BD
@@ -155,11 +174,19 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	nombreServicio := req.Form.Get("nombreServicio")
 	log.Println("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
 
-	database.DeleteAccount(email, pass, nombreServicio)
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
 	// Respondemos
-	response(w, 200, "")
+	if !updateSession(email) {
+		// La sesión sigue abierta
+		response(w, 401, "")
+	} else {
+
+		database.DeleteAccount(email, pass, nombreServicio)
+		// Cabecera estándar
+		w.Header().Set("Content-Type", "text/plain")
+		// Respondemos
+		response(w, 200, "")
+
+	}
 }
 
 // Recupera las cuentas de servicio de un usuario de la BD

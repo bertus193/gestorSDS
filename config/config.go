@@ -7,4 +7,4 @@ var SecureServerPort = ":10443"
 var SecureURL = "https://127.0.0.1"
 
 // Tie.po de sesion
-var MaxTimeSession = 5.0
+var MaxTimeSession = 10.0

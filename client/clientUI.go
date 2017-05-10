@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 
 	"github.com/bertus193/gestorSDS/model"
 	"github.com/bertus193/gestorSDS/utils"
@@ -189,6 +190,14 @@ func uiAddAccount(fromError string) {
 	var inputAccountType string
 	var inputAccountUser string
 	var inputAccountPass string
+	//inputCharsDecission
+	var inputPassDecission, inputNumsDecission, inputSymbolsDecission string
+	var inputLenghtDecission string
+	var inputGenPassDecission string
+	var inputLenghtDecissionNum int
+	//boolCharsDecission := false
+	boolNumsDecission := false
+	boolSymbolsDecission := false
 	fmt.Printf("# Añadir cuenta\n\n")
 	if fromError != "" {
 		fmt.Printf("* %s\n\n", fromError)
@@ -198,8 +207,57 @@ func uiAddAccount(fromError string) {
 	fmt.Scanf("%s", &inputAccountType)
 	fmt.Print("Usuario: ")
 	fmt.Scanf("%s", &inputAccountUser)
-	fmt.Print("Contraseña: ")
-	fmt.Scanf("%s", &inputAccountPass)
+
+	fmt.Print("¿Deseas generar una contraseña? (si, no): ")
+	fmt.Scanf("%s", &inputPassDecission)
+
+	var outLength = false
+	var outGenPass = false
+	if inputPassDecission == "si" {
+
+		for outGenPass == false {
+			outLength = false
+			for outLength == false {
+				fmt.Print("¿Que tamaño de contraseña deseas? ")
+				fmt.Scanf("%s", &inputLenghtDecission)
+				if _, err := strconv.Atoi(inputLenghtDecission); err == nil {
+					inputLenghtDecissionNum, _ = strconv.Atoi(inputLenghtDecission)
+					outLength = true
+				}
+			}
+
+			/*fmt.Print("¿Deseas que tenga letras? (si, no): ")
+			fmt.Scanf("%s", &inputCharsDecission)
+			if inputCharsDecission == "si" {
+				boolCharsDecission = true
+			}*/
+
+			fmt.Print("¿Deseas que tenga números? (si, no): ")
+			fmt.Scanf("%s", &inputNumsDecission)
+			if inputNumsDecission == "si" {
+				boolNumsDecission = true
+			}
+
+			fmt.Print("¿Deseas que tenga símbolos? (si, no): ")
+			fmt.Scanf("%s", &inputSymbolsDecission)
+			if inputSymbolsDecission == "si" {
+				boolSymbolsDecission = true
+			}
+
+			inputAccountPass = utils.GeneratePassword(inputLenghtDecissionNum, true, boolNumsDecission, boolSymbolsDecission)
+			fmt.Println("La contraseña es: " + inputAccountPass)
+			fmt.Print("¿Estás de acuerdo? (si, no): ")
+			fmt.Scanf("%s", &inputGenPassDecission)
+
+			if inputGenPassDecission == "si" {
+				outGenPass = true
+			}
+		}
+	} else {
+
+		fmt.Print("Contraseña: ")
+		fmt.Scanf("%s", &inputAccountPass)
+	}
 
 	crearCuenta(httpClient, inputAccountType, inputAccountUser, inputAccountPass)
 	uiUserMainMenu("")

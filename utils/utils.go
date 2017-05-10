@@ -6,6 +6,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"log"
+	"math/big"
 
 	"golang.org/x/crypto/scrypt"
 )
@@ -71,4 +73,43 @@ func Decode64(s string) []byte {
 	b, err := base64.StdEncoding.DecodeString(s) // recupera el formato original
 	chk(err)                                     // comprobamos el error
 	return b                                     // devolvemos los datos originales
+}
+
+// generar contraseñas
+func GeneratePassword(tamano int, letras bool, numeros bool, simbolos bool) string {
+	arrayLetras := "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz"
+	arrayNumeros := "0123456789"
+	arraySimbolos := "+-/&<%#@*{!"
+
+	arrayBase := ""
+	salida := ""
+
+	if letras == true {
+		arrayBase = arrayBase + arrayLetras
+	}
+	if numeros == true {
+		arrayBase = arrayBase + arrayNumeros
+	}
+	if simbolos == true {
+		arrayBase = arrayBase + arraySimbolos
+	}
+
+	if arrayBase != "" {
+		for i := 0; i < tamano; i++ {
+			salida += string(arrayBase[cryptoRandSecure(int64(len(arrayBase)))])
+		}
+	} else {
+		return "error"
+	}
+
+	return string(salida)
+
+}
+
+func cryptoRandSecure(max int64) int64 {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		log.Println(err)
+	}
+	return nBig.Int64()
 }

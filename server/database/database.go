@@ -53,8 +53,9 @@ func before() {
 		//fileData := []byte("{}")
 		ioutil.WriteFile("./server/database/bd.txt", []byte(""), 0644)
 	} else {
-		//decompress := []byte(utils.Decompress(bytesEntrada))
-		if err := json.Unmarshal(bytesEntrada, &result); err != nil {
+		decompress := []byte(utils.Decompress(bytesEntrada))
+		//decompress := utils.Decrypt(bytesEntrada, config.PassDBEncrypt)
+		if err := json.Unmarshal(decompress, &result); err != nil {
 			panic("Error al leer fichero de entrada")
 		}
 	}
@@ -78,7 +79,8 @@ func After() {
 	}
 
 	usuarios := string(j)
-	usuarios = utils.Compress(usuarios)
+	//usuarios := string(utils.Encrypt(j, config.PassDBEncrypt)) //Encriptar
+	usuarios = utils.Compress(usuarios) //Comprimir
 
 	salida.Write([]byte(usuarios))
 }

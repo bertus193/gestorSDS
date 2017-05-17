@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"bytes"
+	"compress/zlib"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 
@@ -112,4 +115,26 @@ func cryptoRandSecure(max int64) int64 {
 		log.Println(err)
 	}
 	return nBig.Int64()
+}
+
+func Compress(text string) string {
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write([]byte(text))
+	w.Close()
+	return string(b.Bytes())
+	// Output: [120 156 202 72 205 201 201 215 81 40 207 47 202 73 225 2 4 0 0 255 255 33 231 4 147]
+
+}
+
+func Decompress(buff []byte) string {
+	b := bytes.NewReader(buff)
+	r, err := zlib.NewReader(b)
+	if err != nil {
+		panic(err)
+	}
+	if b, err := ioutil.ReadAll(r); err == nil {
+		return string(b)
+	}
+	return "error"
 }

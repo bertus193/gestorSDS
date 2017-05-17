@@ -53,6 +53,7 @@ func before() {
 		//fileData := []byte("{}")
 		ioutil.WriteFile("./server/database/bd.txt", []byte(""), 0644)
 	} else {
+		//decompress := []byte(utils.Decompress(bytesEntrada))
 		if err := json.Unmarshal(bytesEntrada, &result); err != nil {
 			panic("Error al leer fichero de entrada")
 		}
@@ -77,6 +78,7 @@ func After() {
 	}
 
 	usuarios := string(j)
+	usuarios = utils.Compress(usuarios)
 
 	salida.Write([]byte(usuarios))
 }

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/bertus193/gestorSDS/config"
 	"github.com/bertus193/gestorSDS/model"
 	"github.com/bertus193/gestorSDS/utils"
 )
@@ -54,7 +55,7 @@ func before() {
 		ioutil.WriteFile("./server/database/bd.txt", []byte(""), 0644)
 	} else {
 		decompress := []byte(utils.Decompress(bytesEntrada))
-		//decompress := utils.Decrypt(bytesEntrada, config.PassDBEncrypt)
+		decompress = utils.Decrypt(decompress, config.PassDBEncrypt)
 		if err := json.Unmarshal(decompress, &result); err != nil {
 			panic("Error al leer fichero de entrada")
 		}
@@ -78,9 +79,9 @@ func After() {
 		fmt.Println(err)
 	}
 
-	usuarios := string(j)
-	//usuarios := string(utils.Encrypt(j, config.PassDBEncrypt)) //Encriptar
-	usuarios = utils.Compress(usuarios) //Comprimir
+	//usuarios := string(j)
+	usuarios := string(utils.Encrypt(j, config.PassDBEncrypt)) //Encriptar
+	usuarios = utils.Compress(usuarios)                        //Comprimir
 
 	salida.Write([]byte(usuarios))
 }

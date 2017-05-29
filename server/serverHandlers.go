@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -29,7 +28,7 @@ func loginUsuario(w http.ResponseWriter, req *http.Request) {
 
 	startSession(email)
 
-	log.Println("loginUsuario: [" + email + ", " + pass + "]")
+	AddLog("loginUsuario: [" + email + ", " + pass + "]")
 
 	userExists := database.ExistsUser(email, pass)
 
@@ -51,7 +50,7 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	// Recuperamos los datos
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
-	log.Println("registroUsuario: [" + email + ", " + pass + "]")
+	AddLog("registroUsuario: [" + email + ", " + pass + "]")
 
 	database.AddUser(email, pass)
 
@@ -70,7 +69,7 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	passAnterior := req.Form.Get("passAnterior")
 	passNuevo := req.Form.Get("passNuevo")
-	log.Println("modificarUsuario: [" + email + ", " + passAnterior + ", " + passNuevo + "]")
+	AddLog("modificarUsuario: [" + email + ", " + passAnterior + ", " + passNuevo + "]")
 
 	if !updateSession(email) {
 		// La sesión sigue abierta
@@ -92,7 +91,7 @@ func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
 	// Recuperamos los datos
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
-	log.Println("eliminarUsuario: [" + email + ", " + pass + "]")
+	AddLog("eliminarUsuario: [" + email + ", " + pass + "]")
 
 	if !updateSession(email) {
 		// La sesión sigue abierta
@@ -118,7 +117,7 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicio := req.Form.Get("passServicio")
-	log.Println("crearCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
+	AddLog("crearCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
 
 	if !updateSession(email) {
 		// La sesión sigue abierta
@@ -146,7 +145,7 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicio := req.Form.Get("passServicio")
-	log.Println("modificarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
+	AddLog("modificarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
 
 	if !updateSession(email) {
 		// La sesión sigue abierta
@@ -172,7 +171,7 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	updateSession(email)
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
-	log.Println("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
+	AddLog("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
 
 	// Respondemos
 	if !updateSession(email) {
@@ -197,7 +196,7 @@ func listarCuentas(w http.ResponseWriter, req *http.Request) {
 	// Recuperamos los datos
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
-	log.Println("listarCuentas: [" + email + ", " + pass + "]")
+	AddLog("listarCuentas: [" + email + ", " + pass + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -221,7 +220,7 @@ func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	pass := req.Form.Get("pass")
 	nombreServicio := req.Form.Get("nombreServicio")
-	log.Println("detallesCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
+	AddLog("detallesCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
 
 	accountInfo := database.GetJSONAccountFromUser(email, pass, nombreServicio)
 

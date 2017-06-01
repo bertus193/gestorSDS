@@ -63,7 +63,6 @@ func clearScreen() {
 func uiInicio(fromError string) {
 	clearScreen()
 
-	var inputSelectionStr string
 	fmt.Printf("# Bienvenido\n\n")
 	fmt.Println("1. Entrar")
 	fmt.Println("2. Crear usuario")
@@ -73,7 +72,7 @@ func uiInicio(fromError string) {
 		fmt.Printf("\n* %s", fromError)
 	}
 	fmt.Printf("\nSeleccione una opción: ")
-	fmt.Scanf("%s", &inputSelectionStr)
+	inputSelectionStr := utils.CustomScanf()
 
 	switch {
 	case inputSelectionStr == "1":
@@ -98,9 +97,9 @@ func uiLoginMaster(fromError string) {
 	}
 
 	fmt.Print("Email: ")
-	fmt.Scanf("%s", &inputUser)
+	inputUser = utils.CustomScanf()
 	fmt.Print("Contraseña: ")
-	fmt.Scanf("%s", &inputPass)
+	inputPass = utils.CustomScanf()
 
 	userExists := loginUsuario(httpClient, inputUser, inputPass)
 	if userExists == true {
@@ -121,9 +120,9 @@ func uiRegistroMaster(fromError string) {
 	}
 
 	fmt.Print("Email: ")
-	fmt.Scanf("%s", &inputUser)
+	inputUser = utils.CustomScanf()
 	fmt.Print("Contraseña: ")
-	fmt.Scanf("%s", &inputPass)
+	inputPass = utils.CustomScanf()
 
 	registroUsuario(httpClient, inputUser, inputPass)
 	uiInicio("")
@@ -165,7 +164,7 @@ func uiUserMainMenu(fromError string) {
 		fmt.Printf("\n* %s", fromError)
 	}
 	fmt.Printf("\nSeleccione una opción: ")
-	fmt.Scanf("%s", &inputSelectionStr)
+	inputSelectionStr = utils.CustomScanf()
 
 	switch {
 	case inputSelectionStr == "1":
@@ -173,7 +172,7 @@ func uiUserMainMenu(fromError string) {
 	case inputSelectionStr == "2":
 		var inputAccountSelectionStr string
 		fmt.Print("Elige la cuenta: ")
-		fmt.Scanf("%s", &inputAccountSelectionStr)
+		inputAccountSelectionStr = utils.CustomScanf()
 		uiServiceMenu("", inputAccountSelectionStr)
 	case inputSelectionStr == "3":
 		uiDeleteUser("")
@@ -204,12 +203,12 @@ func uiAddAccount(fromError string) {
 	}
 
 	fmt.Print("Tipo de cuenta (twitter, facebook, etc): ")
-	fmt.Scanf("%s", &inputAccountType)
+	inputAccountType = utils.CustomScanf()
 	fmt.Print("Usuario: ")
-	fmt.Scanf("%s", &inputAccountUser)
+	inputAccountUser = utils.CustomScanf()
 
 	fmt.Print("¿Deseas generar una contraseña? (si, no): ")
-	fmt.Scanf("%s", &inputPassDecission)
+	inputPassDecission = utils.CustomScanf()
 
 	var outLength = false
 	var outGenPass = false
@@ -219,7 +218,7 @@ func uiAddAccount(fromError string) {
 			outLength = false
 			for outLength == false {
 				fmt.Print("¿Que tamaño de contraseña deseas? ")
-				fmt.Scanf("%s", &inputLenghtDecission)
+				inputLenghtDecission = utils.CustomScanf()
 				if _, err := strconv.Atoi(inputLenghtDecission); err == nil {
 					inputLenghtDecissionNum, _ = strconv.Atoi(inputLenghtDecission)
 					outLength = true
@@ -233,13 +232,13 @@ func uiAddAccount(fromError string) {
 			}*/
 
 			fmt.Print("¿Deseas que tenga números? (si, no): ")
-			fmt.Scanf("%s", &inputNumsDecission)
+			inputNumsDecission = utils.CustomScanf()
 			if inputNumsDecission == "si" {
 				boolNumsDecission = true
 			}
 
 			fmt.Print("¿Deseas que tenga símbolos? (si, no): ")
-			fmt.Scanf("%s", &inputSymbolsDecission)
+			inputSymbolsDecission = utils.CustomScanf()
 			if inputSymbolsDecission == "si" {
 				boolSymbolsDecission = true
 			}
@@ -247,7 +246,7 @@ func uiAddAccount(fromError string) {
 			inputAccountPass = utils.GeneratePassword(inputLenghtDecissionNum, true, boolNumsDecission, boolSymbolsDecission)
 			fmt.Println("La contraseña es: " + inputAccountPass)
 			fmt.Print("¿Estás de acuerdo? (si, no): ")
-			fmt.Scanf("%s", &inputGenPassDecission)
+			inputGenPassDecission = utils.CustomScanf()
 
 			if inputGenPassDecission == "si" {
 				outGenPass = true
@@ -256,7 +255,7 @@ func uiAddAccount(fromError string) {
 	} else {
 
 		fmt.Print("Contraseña: ")
-		fmt.Scanf("%s", &inputAccountPass)
+		inputAccountPass = utils.CustomScanf()
 	}
 
 	crearCuenta(httpClient, inputAccountType, inputAccountUser, inputAccountPass)
@@ -296,7 +295,7 @@ func uiServiceMenu(fromError string, accountSelectionStr string) {
 		fmt.Printf("\n* %s", fromError)
 	}
 	fmt.Printf("\nSeleccione una opción: ")
-	fmt.Scanf("%s", &inputSelectionStr)
+	inputSelectionStr = utils.CustomScanf()
 
 	switch {
 	case inputSelectionStr == "1":
@@ -321,10 +320,10 @@ func uiModifyAccount(fromError string, nombreServicio string) {
 	}
 
 	fmt.Printf("Introduce el nombre de la cuenta  %s: ", nombreServicio)
-	fmt.Scanf("%s", &inputAccountUser)
+	inputAccountUser = utils.CustomScanf()
 
 	fmt.Printf("Introduce la contraseña la cuenta %s: ", nombreServicio)
-	fmt.Scanf("%s", &inputAccountPassword)
+	inputAccountPassword = utils.CustomScanf()
 
 	modificarCuenta(httpClient, inputAccountUser, inputAccountPassword, nombreServicio)
 	uiUserMainMenu("")
@@ -334,7 +333,7 @@ func uiDeleteAccount(fromError string, nombreServicio string) {
 
 	var inputDecission string
 	fmt.Print("¿Estás seguro? (si, no): ")
-	fmt.Scanf("%s", &inputDecission)
+	inputDecission = utils.CustomScanf()
 
 	if inputDecission == "si" {
 		eliminarCuenta(httpClient, nombreServicio)
@@ -347,7 +346,7 @@ func uiDeleteUser(fromError string) {
 
 	var inputDecission string
 	fmt.Print("¿Estás seguro? (si, no): ")
-	fmt.Scanf("%s", &inputDecission)
+	inputDecission = utils.CustomScanf()
 
 	if inputDecission == "si" {
 		_, _, errStr := eliminarUsuario(httpClient)

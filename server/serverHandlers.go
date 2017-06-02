@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bertus193/gestorSDS/config"
 	"github.com/bertus193/gestorSDS/server/database"
+	"github.com/bertus193/gestorSDS/utils"
 )
 
 // función para escribir una respuesta del servidor
-func response(w http.ResponseWriter, code int, msgJSON string) {
+func response(w http.ResponseWriter, code int, payloadJSON string) {
 	w.WriteHeader(code)
-	fmt.Fprintf(w, msgJSON)
+	fmt.Fprintf(w, payloadJSON)
 }
 
 var session = make(map[string]time.Time)
@@ -24,19 +24,24 @@ func loginUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	email := req.Form.Get("email")
-	pass := req.Form.Get("pass")
+	passw := req.Form.Get("pass")
 
-	startSession(email)
-
-	AddLog("loginUsuario: [" + email + ", " + pass + "]")
-
-	userExists := database.ExistsUser(email, pass)
+	AddLog("loginUsuario: [" + email + ", " + passw + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
-	// Respondemos
-	if userExists {
-		response(w, 200, "")
+
+	if database.ExistsUser(email, passw) {
+		if tempUser, err := database.GetUserFromEmail(email); err != nil {
+			response(w, 500, "")
+		} else if tempUser.A2FEnabled == true {
+			token, a2fcode := CreateUserSession(email, true)
+			utils.Send2FACode(email, a2fcode)
+			response(w, 250, token)
+		} else {
+			token, _ := CreateUserSession(email, false)
+			response(w, 200, token)
+		}
 	} else {
 		response(w, 500, "")
 	}
@@ -66,20 +71,22 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 
 	// Recuperamos los datos
-	email := req.Form.Get("email")
+	token := req.Form.Get("token")
 	passAnterior := req.Form.Get("passAnterior")
 	passNuevo := req.Form.Get("passNuevo")
-	AddLog("modificarUsuario: [" + email + ", " + passAnterior + ", " + passNuevo + "]")
+	AddLog("modificarUsuario: [" + token + ", " + passAnterior + ", " + passNuevo + "]")
 
-	if !updateSession(email) {
-		// La sesión sigue abierta
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+
+	// Respondemos
+	if _, err := GetUserFromSession(token); err != nil {
+		// La sesión ha caducado o no es valida
 		response(w, 401, "")
 	} else {
-		// Cabecera estándar
-		w.Header().Set("Content-Type", "text/plain")
-		// Respondemos
+		// La sesión sigue abierta, eliminamos en la BD y respondemos
+		// to-do
 		response(w, 501, "to-do")
-
 	}
 }
 
@@ -89,20 +96,20 @@ func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 
 	// Recuperamos los datos
-	email := req.Form.Get("email")
-	pass := req.Form.Get("pass")
-	AddLog("eliminarUsuario: [" + email + ", " + pass + "]")
+	token := req.Form.Get("token")
+	AddLog("eliminarUsuario: [" + token + "]")
 
-	if !updateSession(email) {
-		// La sesión sigue abierta
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+
+	// Respondemos
+	if email, err := GetUserFromSession(token); err != nil {
+		// La sesión ha caducado o no es valida
 		response(w, 401, "")
 	} else {
-		database.DeleteUser(email, pass)
-		// Cabecera estándar
-		w.Header().Set("Content-Type", "text/plain")
-		// Respondemos
+		// La sesión sigue abierta, eliminamos en la BD y respondemos
+		database.DeleteUser(email)
 		response(w, 200, "")
-
 	}
 }
 
@@ -112,25 +119,23 @@ func crearCuenta(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 
 	// Recuperamos los datos
-	email := req.Form.Get("email")
-	pass := req.Form.Get("pass")
+	token := req.Form.Get("token")
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicio := req.Form.Get("passServicio")
-	AddLog("crearCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
+	AddLog("crearCuenta: [" + token + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
 
-	if !updateSession(email) {
-		// La sesión sigue abierta
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+
+	// Respondemos
+	if email, err := GetUserFromSession(token); err != nil {
+		// La sesión ha caducado o no es valida
 		response(w, 401, "")
 	} else {
-		// Añadimos el servicio a la BD
-		database.AddAccountToUser(email, pass, nombreServicio, usuarioServicio, passServicio)
-
-		// Cabecera estándar
-		w.Header().Set("Content-Type", "text/plain")
-		// Respondemos
-		response(w, 501, "to-do")
-
+		// La sesión sigue abierta, añadimos a la BD y respondemos
+		database.AddAccountToUser(email, nombreServicio, usuarioServicio, passServicio)
+		response(w, 201, "")
 	}
 }
 
@@ -140,23 +145,22 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 
 	// Recuperamos los datos (servicio)
-	email := req.Form.Get("email")
-	pass := req.Form.Get("pass")
+	token := req.Form.Get("token")
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicio := req.Form.Get("passServicio")
-	AddLog("modificarCuenta: [" + email + ", " + pass + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
+	AddLog("modificarCuenta: [" + token + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
 
-	if !updateSession(email) {
-		// La sesión sigue abierta
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+
+	// Respondemos
+	if email, err := GetUserFromSession(token); err != nil {
+		// La sesión ha caducado o no es valida
 		response(w, 401, "")
 	} else {
-
-		database.SetAccount(email, pass, nombreServicio, usuarioServicio, passServicio)
-		// Cabecera estándar
-		w.Header().Set("Content-Type", "text/plain")
-		// Respondemos
-
+		// La sesión sigue abierta, modificamos en la BD y respondemos
+		database.SetAccount(email, nombreServicio, usuarioServicio, passServicio)
 		response(w, 200, "")
 	}
 }
@@ -167,24 +171,21 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 
 	// Recuperamos los datos
-	email := req.Form.Get("email")
-	updateSession(email)
-	pass := req.Form.Get("pass")
+	token := req.Form.Get("token")
 	nombreServicio := req.Form.Get("nombreServicio")
-	AddLog("eliminarCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
+	AddLog("eliminarCuenta: [" + token + ", " + nombreServicio + "]")
+
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
 
 	// Respondemos
-	if !updateSession(email) {
-		// La sesión sigue abierta
+	if email, err := GetUserFromSession(token); err != nil {
+		// La sesión ha caducado o no es valida
 		response(w, 401, "")
 	} else {
-
-		database.DeleteAccount(email, pass, nombreServicio)
-		// Cabecera estándar
-		w.Header().Set("Content-Type", "text/plain")
-		// Respondemos
+		// La sesión sigue abierta, eliminamos en la BD y respondemos
+		database.DeleteAccount(email, nombreServicio)
 		response(w, 200, "")
-
 	}
 }
 
@@ -194,20 +195,19 @@ func listarCuentas(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 
 	// Recuperamos los datos
-	email := req.Form.Get("email")
-	pass := req.Form.Get("pass")
-	AddLog("listarCuentas: [" + email + ", " + pass + "]")
+	token := req.Form.Get("token")
+	AddLog("listarCuentas: [" + token + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 
 	// Respondemos
-	if updateSession(email) {
-		// La sesión sigue abierta
-		response(w, 200, database.GetJSONAllAccountsFromUser(email, pass))
-	} else {
-		// La sesión ha caducado
+	if email, err := GetUserFromSession(token); err != nil {
+		// La sesión ha caducado o no es valida
 		response(w, 401, "")
+	} else {
+		// La sesión sigue abierta, devolvemos la información
+		response(w, 200, database.GetJSONAllAccountsFromUser(email))
 	}
 }
 
@@ -217,50 +217,20 @@ func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 
 	// Recuperamos los datos
-	email := req.Form.Get("email")
-	pass := req.Form.Get("pass")
+	token := req.Form.Get("token")
 	nombreServicio := req.Form.Get("nombreServicio")
-	AddLog("detallesCuenta: [" + email + ", " + pass + ", " + nombreServicio + "]")
-
-	accountInfo := database.GetJSONAccountFromUser(email, pass, nombreServicio)
+	AddLog("detallesCuenta: [" + token + ", " + nombreServicio + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 
 	// Respondemos
-	if updateSession(email) {
-		// La sesión sigue abierta
-		response(w, 200, accountInfo)
-	} else {
-		// La sesión ha caducado
+	if email, err := GetUserFromSession(token); err != nil {
+		// La sesión ha caducado o no es valida
 		response(w, 401, "")
-	}
-}
-
-func updateSession(email string) bool {
-
-	isOpen := true
-	// Si no existe sesion con el usuario
-	if session[email].IsZero() {
-		session[email] = time.Now()
 	} else {
-
-		duration := time.Now().Sub(session[email])
-		// Si la sesion supera el tiempo máximo
-		if duration.Seconds() > config.MaxTimeSession {
-			isOpen = false
-		} else {
-			session[email] = time.Now()
-		}
+		// La sesión sigue abierta, devolvemos la información
+		accountInfo := database.GetJSONAccountFromUser(email, nombreServicio)
+		response(w, 200, accountInfo)
 	}
-
-	return isOpen
-}
-
-func startSession(email string) {
-	delete(session, email)
-}
-
-func ClearSession(email string) {
-	//session[email] = nil
 }

@@ -1,1 +1,4 @@
 .DS_Store
+
+# Ficheros de logs generados
+server/*.log

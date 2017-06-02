@@ -3,6 +3,7 @@ package database
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -99,6 +100,7 @@ func AddUser(email string, pass string) {
 		gestor[email] = model.Usuario{
 			MasterPassword:     string(hashPass),
 			MasterPasswordSalt: saltBase64,
+			A2FEnabled:         false,
 			Accounts:           make(map[string]model.Account)}
 	}
 }
@@ -122,15 +124,24 @@ func ExistsUser(userEmail string, userPass string) bool {
 	return false
 }
 
+func GetUserFromEmail(userEmail string) (model.Usuario, error) {
+	var err error
+	user, ok := gestor[userEmail]
+	if !ok {
+		err = errors.New("user not found")
+	}
+	return user, err
+}
+
 // AddAccountToUser añade datos a un ya dado de alta
-func AddAccountToUser(userEmail string, userPass string, serviceName string, serviceUser string, servicePass string) {
+func AddAccountToUser(userEmail string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
 
 	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
 }
 
 // GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario
-func GetJSONAllAccountsFromUser(usuario string, pass string) string {
+func GetJSONAllAccountsFromUser(usuario string) string {
 	userAccounts := gestor[usuario].Accounts
 	// todo: comprobar y validar contraseña
 
@@ -144,7 +155,7 @@ func GetJSONAllAccountsFromUser(usuario string, pass string) string {
 }
 
 // GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario
-func GetJSONAccountFromUser(usuario string, pass string, nombreServicio string) string {
+func GetJSONAccountFromUser(usuario string, nombreServicio string) string {
 	userAccount := gestor[usuario].Accounts[nombreServicio]
 	// todo: comprobar y validar contraseña
 
@@ -169,19 +180,19 @@ func GetAll() string {
 }
 
 // SetAccountUser Modifica cuenta de usuario
-func SetAccount(userEmail string, userPass string, serviceName string, serviceUser string, servicePass string) {
+func SetAccount(userEmail string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
 	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
 }
 
 // deleteAccount Elimina cuenta de usuario
-func DeleteAccount(userEmail string, userPass string, serviceName string) {
+func DeleteAccount(userEmail string, serviceName string) {
 	// todo: comprobar que el usuario existe antes de asignar
 	delete(gestor[userEmail].Accounts, serviceName)
 }
 
 // deleteAccount Elimina cuenta de usuario
-func DeleteUser(userEmail string, userPass string) {
+func DeleteUser(userEmail string) {
 	// todo: comprobar que el usuario existe antes de asignar
 	delete(gestor, userEmail)
 }

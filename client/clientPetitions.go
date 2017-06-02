@@ -15,8 +15,7 @@ import (
 	"github.com/bertus193/gestorSDS/utils"
 )
 
-var userLogin string
-var keyLogin string
+var sessionToken string
 var keyData []byte
 
 func loginUsuario(client *http.Client, email string, pass string) bool {
@@ -24,9 +23,8 @@ func loginUsuario(client *http.Client, email string, pass string) bool {
 	data.Set("email", email)
 
 	keyClient := sha512.Sum512([]byte(pass))
+	keyLogin := utils.Encode64(keyClient[0:31])
 	keyData = keyClient[32:64]
-	keyLogin = utils.Encode64(keyClient[0:31])
-	userLogin = email
 
 	data.Set("pass", keyLogin)
 
@@ -39,6 +37,14 @@ func loginUsuario(client *http.Client, email string, pass string) bool {
 		defer response.Body.Close()
 
 		if response.StatusCode == 200 {
+			bodyBytes, _ := ioutil.ReadAll(response.Body)
+			sessionToken = string(bodyBytes)
+			return true
+		}
+
+		if response.StatusCode == 250 {
+			bodyBytes, _ := ioutil.ReadAll(response.Body)
+			sessionToken = string(bodyBytes)
 			return true
 		}
 	}
@@ -59,8 +65,7 @@ func registroUsuario(client *http.Client, email string, pass string) (*http.Resp
 
 func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio string, passServicio string) (*http.Response, error, string) {
 	data := url.Values{}
-	data.Set("email", userLogin)
-	data.Set("pass", keyLogin)
+	data.Set("token", sessionToken)
 	data.Set("nombreServicio", nombreServicio)
 	data.Set("usuarioServicio", usuarioServicio)
 
@@ -75,7 +80,7 @@ func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio str
 		// Cerramos la conexión
 		defer response.Body.Close()
 	}
-	if response.StatusCode != 200 {
+	if response.StatusCode != 201 {
 		return response, err, "errorSesion"
 	}
 
@@ -84,8 +89,7 @@ func crearCuenta(client *http.Client, nombreServicio string, usuarioServicio str
 
 func eliminarUsuario(client *http.Client) (*http.Response, error, string) {
 	data := url.Values{}
-	data.Set("email", userLogin)
-	data.Set("pass", keyLogin)
+	data.Set("token", sessionToken)
 
 	response, err := client.PostForm(baseURL+"/usuario/eliminar", data)
 
@@ -104,8 +108,7 @@ func eliminarUsuario(client *http.Client) (*http.Response, error, string) {
 
 func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error, string) {
 	data := url.Values{}
-	data.Set("email", userLogin)
-	data.Set("pass", keyLogin)
+	data.Set("token", sessionToken)
 	data.Set("nombreServicio", nombreServicio)
 	data.Set("usuarioServicio", usuarioServicio)
 
@@ -129,8 +132,7 @@ func modificarCuenta(client *http.Client, usuarioServicio string, passServicio s
 
 func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response, string) {
 	data := url.Values{}
-	data.Set("email", userLogin)
-	data.Set("pass", keyLogin)
+	data.Set("token", sessionToken)
 	data.Set("nombreServicio", nombreServicio)
 
 	response, err := client.PostForm(baseURL+"/cuentas/eliminar", data)
@@ -149,9 +151,9 @@ func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response,
 }
 
 func listarCuentas(client *http.Client) (map[string]model.Account, string) {
+
 	data := url.Values{}
-	data.Set("email", userLogin)
-	data.Set("pass", keyLogin)
+	data.Set("token", sessionToken)
 
 	response, err := client.PostForm(baseURL+"/cuentas", data)
 	if err != nil {
@@ -187,8 +189,7 @@ func listarCuentas(client *http.Client) (map[string]model.Account, string) {
 
 func detallesCuenta(client *http.Client, nombreServicio string) (model.Account, string) {
 	data := url.Values{}
-	data.Set("email", userLogin)
-	data.Set("pass", keyLogin)
+	data.Set("token", sessionToken)
 	data.Set("nombreServicio", nombreServicio)
 
 	response, err := client.PostForm(baseURL+"/cuentas/detalles", data)

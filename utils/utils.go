@@ -99,7 +99,7 @@ func GeneratePassword(tamano int, letras bool, numeros bool, simbolos bool) stri
 
 	if arrayBase != "" {
 		for i := 0; i < tamano; i++ {
-			salida += string(arrayBase[cryptoRandSecure(int64(len(arrayBase)))])
+			salida += string(arrayBase[CryptoRandSecure(int64(len(arrayBase)))])
 		}
 	} else {
 		return "error"
@@ -109,12 +109,12 @@ func GeneratePassword(tamano int, letras bool, numeros bool, simbolos bool) stri
 
 }
 
-func cryptoRandSecure(max int64) int64 {
+func CryptoRandSecure(max int64) int {
 	nBig, err := rand.Int(rand.Reader, big.NewInt(max))
 	if err != nil {
 		log.Println(err)
 	}
-	return nBig.Int64()
+	return int(nBig.Int64())
 }
 
 func Compress(text string) string {

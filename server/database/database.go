@@ -29,22 +29,15 @@ import (
 }
 */
 
-var gestor = make(map[string]model.Usuario)
+var gestor = make(map[string]*model.Usuario)
 
 func init() {
 	before()
-	// todo: borrar
-	// Datos de relleno para probar el acceso (BORRAR)
-	/*AddUser("demoEmail", "demoMasterPass")
-	AddAccountToUser("demoEmail", "facebook", "facebookUser", "facebookPass")
-	AddAccountToUser("demoEmail", "twitter", "twitterUser", "twitterPass")
-	AddUser("demoEmail2", "demoMasterPass2")*/
-
 }
 
 // Lee el fichero
 func before() {
-	result := make(map[string]model.Usuario)
+	result := make(map[string]*model.Usuario)
 
 	bytesEntrada, err := ioutil.ReadFile("./server/database/bd.txt")
 	error := false
@@ -65,6 +58,106 @@ func before() {
 	gestor = result
 }
 
+// CreateUser guarda un nuevo usuario en la BD
+func CreateUser(email string, passw string) error {
+
+	var errResult error
+
+	// Comprobamos si existe el email en la BD
+	if _, ok := gestor[email]; ok {
+		// Si existe el email, no modificamos nada
+		errResult = errors.New("user already exists")
+	} else if salt, errSalt := utils.GenerateRandomBytes(64); errSalt != nil {
+		// Error al generar "salt"
+		errResult = errors.New("unable to save")
+	} else {
+		// Hash de la contraseña también en servidor
+		bytePass := []byte(passw)
+		hashPass, _ := utils.DeriveKey(bytePass, salt)
+		saltBase64 := base64.StdEncoding.EncodeToString(salt)
+
+		// Guardamos el nuevo usuario
+		gestor[email] = &model.Usuario{
+			UserPassword:     string(hashPass),
+			UserPasswordSalt: saltBase64,
+			A2FEnabled:       false,
+			Vault:            make(map[string]model.VaultEntry)}
+	}
+	return errResult
+}
+
+// GetUser recupera un usuario de la BD que contenta el mismo
+// email y contraseña que las indicads
+func GetUser(email string, passw string) (*model.Usuario, error) {
+
+	var userResult *model.Usuario
+	var errResult error
+
+	// Comprobamos si existe el email en la BD
+	if user, ok := gestor[email]; !ok {
+		// Si no existe el el usuario indicado
+		errResult = errors.New("user not found")
+	} else if salt, errSalt := base64.StdEncoding.DecodeString(user.UserPasswordSalt); errSalt != nil {
+		// Error al recuperar el "salt"
+		errResult = errors.New("unable to recover")
+	} else {
+		// Regeneramos el hash de servidor de la contraseña
+		bytePass := []byte(passw)
+		if hashPass, errHash := utils.DeriveKey(bytePass, salt); errHash != nil {
+			// Error al regenerar el hash
+			errResult = errors.New("unable to recover")
+		} else if user.UserPassword != string(hashPass) {
+			// Las contraseñas no coinciden
+			errResult = errors.New("passwords do not match")
+		} else {
+			userResult = user
+		}
+	}
+	return userResult, errResult
+}
+
+// GetEntries recupera la lista de entradas (sin detalles)
+// de un usuario
+func GetVaultEntries(email string) ([]string, error) {
+
+	var entriesResult []string
+	var errResult error
+
+	// Comprobamos si existe el email en la BD
+	if user, ok := gestor[email]; !ok {
+		// Si no existe el el usuario indicado
+		errResult = errors.New("user not found")
+	} else {
+		// Recuperamos solo el "título" de las entradas
+		entriesResult = make([]string, len(user.Vault))
+		for entry := range user.Vault {
+			entriesResult = append(entriesResult, entry)
+		}
+	}
+	return entriesResult, errResult
+}
+
+func CreateAccountVaultEntry(email string, entryTitle string, userAccount string, passwAccount string) error {
+	var errResult error
+
+	if user, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else if _, okEntry := user.Vault[entryTitle]; okEntry {
+		// Si ya existe una entrada con el mismo título
+		errResult = errors.New("entry already exists")
+	} else {
+		user.Vault[entryTitle] = model.VaultEntry{
+			Mode:     1, // Account
+			User:     userAccount,
+			Password: passwAccount,
+		}
+	}
+
+	return errResult
+}
+
+/**/
 // After Persistencia Base de Datos
 func After() {
 	salida, err := os.Create("./server/database/bd.txt")
@@ -87,44 +180,7 @@ func After() {
 	salida.Write([]byte(usuarios))
 }
 
-// AddUser añade un usuarios al sistema
-func AddUser(email string, pass string) {
-	// todo: comprobar si el usuario ya existe
-
-	salt, errSalt := utils.GenerateRandomBytes(64)
-	if errSalt == nil {
-		bytePass := []byte(pass)
-		hashPass, _ := utils.DeriveKey(bytePass, salt)
-		saltBase64 := base64.StdEncoding.EncodeToString(salt)
-
-		gestor[email] = model.Usuario{
-			MasterPassword:     string(hashPass),
-			MasterPasswordSalt: saltBase64,
-			A2FEnabled:         false,
-			Accounts:           make(map[string]model.Account)}
-	}
-}
-
-// ExistsUser Comprueba que el usuario existe en la BD
-func ExistsUser(userEmail string, userPass string) bool {
-	user, ok := gestor[userEmail]
-	if ok {
-		// Comprobamos la contraseña
-		// Recuperamos el salt del usuario
-		salt, _ := base64.StdEncoding.DecodeString(user.MasterPasswordSalt)
-		bytePass := []byte(userPass)
-		// Regeneramos el hash
-		hashPass, _ := utils.DeriveKey(bytePass, salt)
-
-		// Comprobamos que sean iguales
-		if user.MasterPassword == string(hashPass) {
-			return true
-		}
-	}
-	return false
-}
-
-func GetUserFromEmail(userEmail string) (model.Usuario, error) {
+func GetUserFromEmail(userEmail string) (*model.Usuario, error) {
 	var err error
 	user, ok := gestor[userEmail]
 	if !ok {
@@ -137,26 +193,12 @@ func GetUserFromEmail(userEmail string) (model.Usuario, error) {
 func AddAccountToUser(userEmail string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
 
-	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
-}
-
-// GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario
-func GetJSONAllAccountsFromUser(usuario string) string {
-	userAccounts := gestor[usuario].Accounts
-	// todo: comprobar y validar contraseña
-
-	j, err := json.Marshal(userAccounts)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return string(j)
+	gestor[userEmail].Vault[serviceName] = model.VaultEntry{User: serviceUser, Password: servicePass}
 }
 
 // GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario
 func GetJSONAccountFromUser(usuario string, nombreServicio string) string {
-	userAccount := gestor[usuario].Accounts[nombreServicio]
+	userAccount := gestor[usuario].Vault[nombreServicio]
 	// todo: comprobar y validar contraseña
 
 	j, err := json.Marshal(userAccount)
@@ -182,17 +224,21 @@ func GetAll() string {
 // SetAccountUser Modifica cuenta de usuario
 func SetAccount(userEmail string, serviceName string, serviceUser string, servicePass string) {
 	// todo: comprobar que el usuario existe antes de asignar
-	gestor[userEmail].Accounts[serviceName] = model.Account{User: serviceUser, Password: servicePass}
+	gestor[userEmail].Vault[serviceName] = model.VaultEntry{User: serviceUser, Password: servicePass}
 }
 
 // deleteAccount Elimina cuenta de usuario
 func DeleteAccount(userEmail string, serviceName string) {
 	// todo: comprobar que el usuario existe antes de asignar
-	delete(gestor[userEmail].Accounts, serviceName)
+	delete(gestor[userEmail].Vault, serviceName)
 }
 
 // deleteAccount Elimina cuenta de usuario
 func DeleteUser(userEmail string) {
 	// todo: comprobar que el usuario existe antes de asignar
 	delete(gestor, userEmail)
+}
+
+func ToggleA2f(userEmail string, status bool) {
+	gestor[userEmail].A2FEnabled = status
 }

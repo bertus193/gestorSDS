@@ -43,10 +43,13 @@ func newLogFile() *os.File {
 		} else if len(string(bytesEntrada)) > 0 {
 
 			if config.CifrateLogs == true {
-				bytesEntrada = Decrypt(bytesEntrada, config.PassCifrateLogs)
+
 			}
 			if err := json.Unmarshal(bytesEntrada, &result); err != nil {
-				panic(err)
+				bytesEntrada = Decrypt(bytesEntrada, config.PassCifrateLogs)
+				if err := json.Unmarshal(bytesEntrada, &result); err != nil {
+					panic(err)
+				}
 			}
 			logSlice = result
 		}

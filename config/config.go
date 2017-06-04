@@ -33,7 +33,7 @@ var Account2FA = map[string]string{
 }
 
 //CifrateLogs se encarga de indicar si se desea encriptar el log del servidor
-var CifrateLogs = false
+var CifrateLogs = true
 
 //PassCifrateLogs Password encriptacion Logs
 var PassCifrateLogs = []byte("a really difficult logg password")

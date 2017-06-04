@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/bertus193/gestorSDS/config"
 	"github.com/bertus193/gestorSDS/server/database"
+	"github.com/bertus193/gestorSDS/utils"
 )
 
 var logFile *os.File
@@ -65,18 +65,6 @@ func Launch() {
 	log.Println("Servidor detenido correctamente")
 }
 
-func AddLog(logMessage string) {
-	log.Println(logMessage)
-	logMessage = time.Now().Format("2006-01-02 15:04:05") + " " + logMessage + "\n"
-	logFile.Write([]byte(logMessage))
-}
-
 func before() {
-
-	file, err := os.OpenFile("./server/logs.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	if err != nil {
-		fmt.Printf("error opening file: %v", err)
-	}
-
-	logFile = file
+	logFile = utils.NewLogFile()
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -175,7 +174,7 @@ func listarCuentas(client *http.Client) ([]string, error) {
 				errResult = errors.New("unable to read")
 			} else {
 				result := make([]string, 0)
-				// Recuperamos el objeto del mensaje origianl
+				// Recuperamos el objeto del mensaje original
 				if errJSON := json.Unmarshal(contents, &result); errJSON != nil {
 					errResult = errors.New("unable to unmarshal")
 				} else {
@@ -238,143 +237,158 @@ func crearEntrada(client *http.Client, tituloEntrada string, usuario string, pas
 	return errResult
 }
 
-func eliminarUsuario(client *http.Client) (*http.Response, error, string) {
+func detallesEntrada(client *http.Client, tituloEntrada string) (model.VaultEntry, error) {
+
+	var errResult error
+	detailResult := model.VaultEntry{}
+
 	data := url.Values{}
 	data.Set("token", sessionToken)
+	data.Set("tituloEntrada", tituloEntrada)
 
-	response, err := client.PostForm(baseURL+"/usuario/eliminar", data)
+	// Realizamos la petición
+	response, err := client.PostForm(baseURL+"/vault/detalles", data)
 
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		// Cerramos la conexión
-		defer response.Body.Close()
-	}
-	if response.StatusCode != 200 {
-		return response, err, "errorSesion"
-	}
+	if err == nil {
+		// Si el código de estado recibido no es el esperado (201)
+		if response.StatusCode != 201 {
 
-	return response, err, ""
-}
+			// Comprobamos el código de estado recibido
+			switch response.StatusCode {
+			case 401: // (401 - Unauthorized)
+				errResult = errors.New("unauthorized")
+			case 404: // (404 - Not found)
+				errResult = errors.New("not found")
+			default:
+				errResult = errors.New("unknown")
+			}
+		} else {
 
-func modificarCuenta(client *http.Client, usuarioServicio string, passServicio string, nombreServicio string) (*http.Response, error, string) {
-	data := url.Values{}
-	data.Set("token", sessionToken)
-	data.Set("nombreServicio", nombreServicio)
-	data.Set("usuarioServicio", usuarioServicio)
+			// Leemos la respuesta
+			if contents, errRead := ioutil.ReadAll(response.Body); errRead != nil {
+				errResult = errors.New("unable to read")
+			} else {
 
-	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(passServicio), keyData))
-	data.Set("passServicio", encryptPassServicio)
+				tempEntry := model.VaultEntry{}
 
-	response, err := client.PostForm(baseURL+"/cuentas/modificar", data)
-
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		// Cerramos la conexión
-		defer response.Body.Close()
-	}
-	if response.StatusCode != 200 {
-		return response, err, "errorSesion"
-	}
-
-	return response, err, ""
-}
-
-func eliminarCuenta(client *http.Client, nombreServicio string) (*http.Response, string) {
-	data := url.Values{}
-	data.Set("token", sessionToken)
-	data.Set("nombreServicio", nombreServicio)
-
-	response, err := client.PostForm(baseURL+"/cuentas/eliminar", data)
-
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		// Cerramos la conexión
-		defer response.Body.Close()
-	}
-	if response.StatusCode != 200 {
-		return response, "errorSesion"
-	}
-
-	return response, ""
-}
-
-func detallesCuenta(client *http.Client, nombreServicio string) (model.VaultEntry, string) {
-	data := url.Values{}
-	data.Set("token", sessionToken)
-	data.Set("nombreServicio", nombreServicio)
-
-	response, err := client.PostForm(baseURL+"/cuentas/detalles", data)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		// Cerramos la conexión
-		defer response.Body.Close()
-
-		// Leemos la respuesta
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
+				// Recuperamos el objeto del mensaje origianl
+				if errJSON := json.Unmarshal(contents, &tempEntry); errJSON != nil {
+					errResult = errors.New("unable to unmarshal")
+				} else {
+					// Desciframos la contraseña
+					detailResult = model.VaultEntry{
+						Mode:     1, // Account
+						User:     tempEntry.User,
+						Password: string(utils.Decrypt(utils.Decode64(tempEntry.Password), keyData)),
+					}
+				}
+			}
 		}
 
-		result := model.VaultEntry{}
+	} else {
+		// La petición al servidor no ha obtenido respuesta
+		fmt.Println("* No se ha podido comunicar con el servidor")
+		os.Exit(0)
+	}
+	// Cerramos la conexión
+	defer response.Body.Close()
 
-		// Recuperamos el código http
-		// fmt.Println(response.StatusCode)
+	return detailResult, errResult
+}
 
-		//to-do comprobar todos los codigos de error
+func eliminarEntrada(client *http.Client, tituloEntrada string) error {
+
+	var errResult error
+
+	data := url.Values{}
+	data.Set("token", sessionToken)
+	data.Set("tituloEntrada", tituloEntrada)
+
+	// Realizamos la petición
+	response, err := client.PostForm(baseURL+"/vault/eliminar", data)
+
+	if err == nil {
+		// Si el código de estado recibido no es el esperado (201)
 		if response.StatusCode != 200 {
-			return result, "errorSesion"
+
+			// Comprobamos el código de estado recibido
+			switch response.StatusCode {
+			case 401: // (401 - Unauthorized)
+				errResult = errors.New("unauthorized")
+			case 404: // (404 - Not found)
+				errResult = errors.New("not found")
+			default:
+				errResult = errors.New("unknown")
+			}
 		}
 
-		// Recuperamos el objeto del mensaje origianl
-		if err := json.Unmarshal(contents, &result); err == nil {
-			return result, ""
-		}
+	} else {
+		// La petición al servidor no ha obtenido respuesta
+		fmt.Println("* No se ha podido comunicar con el servidor")
+		os.Exit(0)
 	}
+	// Cerramos la conexión
+	defer response.Body.Close()
 
-	return model.VaultEntry{}, "error"
+	return errResult
 }
 
-func detallesUsuario(client *http.Client) (model.DetallesUsuario, string) {
+func detallesUsuario(client *http.Client) (model.DetallesUsuario, error) {
+
+	var errResult error
+	detailResult := model.DetallesUsuario{}
+
 	data := url.Values{}
 	data.Set("token", sessionToken)
 
+	// Realizamos la petición
 	response, err := client.PostForm(baseURL+"/usuario/detalles", data)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		// Cerramos la conexión
-		defer response.Body.Close()
 
-		// Leemos la respuesta
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		result := model.DetallesUsuario{}
-
-		// Recuperamos el código http
-		// fmt.Println(response.StatusCode)
-
-		//to-do comprobar todos los codigos de error
+	if err == nil {
+		// Si el código de estado recibido no es el esperado (200)
 		if response.StatusCode != 200 {
-			return result, "errorSesion"
+
+			// Comprobamos el código de estado recibido
+			switch response.StatusCode {
+			case 401: // (401 - Unauthorized)
+				errResult = errors.New("unauthorized")
+			case 404: // (404 - Not found)
+				errResult = errors.New("user not found")
+			default:
+				errResult = errors.New("unknown")
+			}
+		} else {
+
+			// Leemos la respuesta
+			if contents, errRead := ioutil.ReadAll(response.Body); errRead != nil {
+				errResult = errors.New("unable to read")
+			} else {
+
+				tempResult := model.DetallesUsuario{}
+
+				// Recuperamos el objeto del mensaje origianl
+				if errJSON := json.Unmarshal(contents, &tempResult); errJSON != nil {
+					errResult = errors.New("unable to unmarshal")
+				} else {
+					detailResult = tempResult
+				}
+			}
 		}
 
-		// Recuperamos el objeto del mensaje origianl
-		if err := json.Unmarshal(contents, &result); err == nil {
-			return result, ""
-		}
+	} else {
+		// La petición al servidor no ha obtenido respuesta
+		fmt.Println("* No se ha podido comunicar con el servidor")
+		os.Exit(0)
 	}
+	// Cerramos la conexión
+	defer response.Body.Close()
 
-	return model.DetallesUsuario{}, "error"
+	return detailResult, errResult
 }
 
-func toggleA2f(client *http.Client, activar bool) (model.DetallesUsuario, string) {
+func updateA2F(client *http.Client, activar bool) error {
+
+	var errResult error
 
 	data := url.Values{}
 	data.Set("token", sessionToken)
@@ -386,34 +400,67 @@ func toggleA2f(client *http.Client, activar bool) (model.DetallesUsuario, string
 		ruta = "/a2f/desactivar"
 	}
 
+	// Realizamos la petición
 	response, err := client.PostForm(baseURL+ruta, data)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		// Cerramos la conexión
-		defer response.Body.Close()
 
-		// Leemos la respuesta
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		result := model.DetallesUsuario{}
-
-		// Recuperamos el código http
-		// fmt.Println(response.StatusCode)
-
-		//to-do comprobar todos los codigos de error
+	if err == nil {
+		// Si el código de estado recibido no es el esperado (200)
 		if response.StatusCode != 200 {
-			return result, "errorSesion"
+
+			// Comprobamos el código de estado recibido
+			switch response.StatusCode {
+			case 401: // (401 - Unauthorized)
+				errResult = errors.New("unauthorized")
+			case 404: // (404 - Not found)
+				errResult = errors.New("user not found")
+			default:
+				errResult = errors.New("unknown")
+			}
 		}
 
-		// Recuperamos el objeto del mensaje origianl
-		if err := json.Unmarshal(contents, &result); err == nil {
-			return result, ""
-		}
+	} else {
+		// La petición al servidor no ha obtenido respuesta
+		fmt.Println("* No se ha podido comunicar con el servidor")
+		os.Exit(0)
 	}
+	// Cerramos la conexión
+	defer response.Body.Close()
 
-	return model.DetallesUsuario{}, "error"
+	return errResult
+}
+
+func eliminarUsuario(client *http.Client) error {
+
+	var errResult error
+
+	data := url.Values{}
+	data.Set("token", sessionToken)
+
+	// Realizamos la petición
+	response, err := client.PostForm(baseURL+"/usuario/eliminar", data)
+
+	if err == nil {
+		// Si el código de estado recibido no es el esperado (201)
+		if response.StatusCode != 200 {
+
+			// Comprobamos el código de estado recibido
+			switch response.StatusCode {
+			case 401: // (401 - Unauthorized)
+				errResult = errors.New("unauthorized")
+			case 404: // (404 - Not found)
+				errResult = errors.New("user not found")
+			default:
+				errResult = errors.New("unknown")
+			}
+		}
+
+	} else {
+		// La petición al servidor no ha obtenido respuesta
+		fmt.Println("* No se ha podido comunicar con el servidor")
+		os.Exit(0)
+	}
+	// Cerramos la conexión
+	defer response.Body.Close()
+
+	return errResult
 }

@@ -7,20 +7,12 @@ import (
 	"strconv"
 
 	"github.com/bertus193/gestorSDS/config"
+	"github.com/bertus193/gestorSDS/model"
 	"github.com/bertus193/gestorSDS/utils"
 	"github.com/fatih/color"
 )
 
 var httpClient *http.Client
-
-/*func checkErrors(errStr string) {
-	switch errStr {
-	case "errorSesion":
-		uiLoginMaster("La sesión ha caducado")
-	case "error":
-		fmt.Printf("* Ha ocurrido un error\n")
-	}
-}*/
 
 func startUI(c *http.Client) {
 	httpClient = c
@@ -232,10 +224,9 @@ func uiUserMainMenu(fromError string) {
 	case inputSelectionStr == "1":
 		uiAddNewEntry("")
 	case inputSelectionStr == "2":
-		// var inputAccountSelectionStr string
-		// fmt.Print("Elige la cuenta: ")
-		// inputAccountSelectionStr = utils.CustomScanf()
-		// uiServiceMenu("", inputAccountSelectionStr)
+		fmt.Print("Elige la cuenta: ")
+		inputEntrySelectionStr := utils.CustomScanf()
+		uiDetailsEntry("", inputEntrySelectionStr)
 	case inputSelectionStr == "3":
 		uiUserConfiguration("")
 	case inputSelectionStr == "0":
@@ -261,10 +252,8 @@ func uiAddNewEntry(fromError string) {
 	// Lectura de los datos de la nueva entrada
 	fmt.Print("Título de la entrada (twitter, facebook, etc): ")
 	inputAccountType := utils.CustomScanf()
-	fmt.Println(inputAccountType)
 	fmt.Print("Usuario: ")
 	inputAccountUser := utils.CustomScanf()
-	fmt.Println(inputAccountUser)
 	fmt.Print("¿Deseas generar una contraseña? (si, no): ")
 	inputGeneratePassw := utils.CustomScanf()
 	var finalPassw string
@@ -317,6 +306,85 @@ func uiAddNewEntry(fromError string) {
 	}
 }
 
+func uiDetailsEntry(fromError string, entryName string) {
+
+	// Limpiamos la pantalla
+	utils.ClearScreen()
+
+	// Título de la pantalla
+	fmt.Printf("# Detalles de cuenta [%s]\n\n", entryName)
+
+	// Petición al servidor
+	fmt.Printf("--------------------------------\n\n")
+	entry, err := detallesEntrada(httpClient, entryName)
+	if err != nil {
+		// Si hay un error, mostramos el mensaje de error adecuado
+		switch err.Error() {
+		case "unauthorized":
+			uiLoginUser("La sesión de usuario ha cadudado.")
+		case "not found":
+			uiUserMainMenu("No se han podido obtener detalles de la cuenta elegida.")
+		default:
+			fmt.Println("Ocurrió un error al recuperar las entradas." + err.Error())
+		}
+	} else {
+
+		// Si los detalles de la cuenta están vacios
+		if (model.VaultEntry{}) == entry {
+			// Volvemos al menú del usuario
+			uiUserMainMenu("No se han podido obtener detalles de la cuenta elegida.")
+		}
+
+		// Mostramos los detalles de la cuenta
+		fmt.Printf("[%s] -> (%s / %s)\n", entryName, entry.User, entry.Password)
+	}
+	fmt.Printf("\n--------------------------------\n\n")
+
+	// Opciones
+	fmt.Println("1. Borrar entrada")
+	fmt.Println("0. Volver")
+
+	// Mensaje de error en caso de existir
+	if fromError != "" {
+		fmt.Printf("\n* %s", fromError)
+	}
+
+	// Lectura de opción elegida
+	fmt.Printf("\nSeleccione una opción: ")
+	inputSelectionStr := utils.CustomScanf()
+
+	switch {
+	case inputSelectionStr == "1":
+		fmt.Print("¿Estás seguro? (si, no): ")
+		inputDecission := utils.CustomScanf()
+		if inputDecission == "si" || inputDecission == "s" {
+
+			// Petición al servidor para eliminar la entrada de la BD
+			if errDel := eliminarEntrada(httpClient, entryName); errDel != nil {
+				// Si hay un error, mostramos el mensaje de error adecuado
+				switch errDel.Error() {
+				case "unauthorized":
+					uiLoginUser("La sesión de usuario ha cadudado.")
+				case "not found":
+					uiUserMainMenu("No se ha podido borrar la entrada.")
+				default:
+					fmt.Println("Ocurrió un error al borrar la entrada." + err.Error())
+				}
+
+			} else {
+				// Se ha eliminado correctamente
+				uiUserMainMenu("")
+			}
+		} else {
+			uiDetailsEntry("", entryName)
+		}
+	case inputSelectionStr == "0":
+		uiUserMainMenu("")
+	default:
+		uiDetailsEntry("La opción elegida no es correcta", entryName)
+	}
+}
+
 func uiUserConfiguration(fromError string) {
 
 	// Limpiamos la pantalla
@@ -325,146 +393,98 @@ func uiUserConfiguration(fromError string) {
 	// Título de la pantalla
 	fmt.Printf("# Página de configuración de usuario\n\n")
 
-	userDetails, _ := detallesUsuario(httpClient)
+	// Petición al servidor
 	fmt.Printf("------ Información de la cuenta ------\n\n")
-	fmt.Printf("Correo electrónico: %s\n", userDetails.Email)
-	fmt.Printf("Número de cuentas guardadas: %d\n", userDetails.NumEntries)
-	fmt.Printf("Segundo factor de autenticación: ")
-	if userDetails.A2FEnabled {
-		fmt.Println("Activado")
+	userDetails, err := detallesUsuario(httpClient)
+	if err != nil {
+		// Si hay un error, mostramos el mensaje de error adecuado
+		switch err.Error() {
+		case "unauthorized":
+			uiLoginUser("La sesión de usuario ha cadudado.")
+		case "user not found":
+			uiLoginUser("No se ha podido obtener la información del usuario.")
+		case "unable to unmarshal":
+			uiUserMainMenu("No se ha podido mostrar la información del usuario.")
+		default:
+			fmt.Println("Ocurrió un error al recuperar los detalles." + err.Error())
+		}
 	} else {
-		fmt.Println("Desactivado")
+
+		// Mostramos los detalles de la cuenta
+		fmt.Printf("Correo electrónico: %s\n", userDetails.Email)
+		fmt.Printf("Número de cuentas guardadas: %d\n", userDetails.NumEntries)
+		fmt.Printf("Segundo factor de autenticación: ")
+		if userDetails.A2FEnabled {
+			fmt.Println("Activado")
+		} else {
+			fmt.Println("Desactivado")
+		}
 	}
 	fmt.Printf("\n\n----------------------------------\n\n")
 
-	var inputSelectionStr string
-
-	fmt.Println("1. Modificar contraseña")
+	// Opciones
+	fmt.Println("1. Modificar contraseña (to-do)")
 	fmt.Println("2. Eliminar mi usuario")
 	if userDetails.A2FEnabled {
 		fmt.Println("3. Desactivar 2FA")
 	} else {
 		fmt.Println("3. Activar 2FA")
 	}
-
 	fmt.Println("0. Volver")
 
+	// Mensaje de error en caso de existir
 	if fromError != "" {
 		fmt.Printf("\n* %s", fromError)
 	}
+
+	// Lectura de opción elegida
 	fmt.Printf("\nSeleccione una opción: ")
-	inputSelectionStr = utils.CustomScanf()
+	inputSelectionStr := utils.CustomScanf()
 
 	switch {
 	case inputSelectionStr == "1":
-		uiUserConfiguration("")
+		uiUserConfiguration("To-do")
 	case inputSelectionStr == "2":
-		uiUserConfiguration("")
+		fmt.Print("¿Estás seguro? (si, no): ")
+		inputDecission := utils.CustomScanf()
+		if inputDecission == "si" || inputDecission == "s" {
+
+			// Petición al servidor para eliminar la entrada de la BD
+			if errDel := eliminarUsuario(httpClient); errDel != nil {
+				// Si hay un error, mostramos el mensaje de error adecuado
+				switch errDel.Error() {
+				case "unauthorized":
+					uiLoginUser("La sesión de usuario ha cadudado.")
+				case "user not found":
+					uiLoginUser("La cuenta de usuario que desea borrar no existe.")
+				default:
+					fmt.Println("Ocurrió un error al borrar la entrada." + err.Error())
+				}
+
+			} else {
+				// Se ha eliminado correctamente
+				uiInicio("Tu cuenta de usuario se ha borrado correctamente. Para usar " + config.AppName + " debes crear un nuevo usuario.")
+			}
+		} else {
+			uiUserConfiguration("")
+		}
 	case inputSelectionStr == "3":
-		toggleA2f(httpClient, !userDetails.A2FEnabled)
-		uiUserConfiguration("")
+		if errUpdate := updateA2F(httpClient, !userDetails.A2FEnabled); errUpdate != nil {
+			// Si hay un error, mostramos el mensaje de error adecuado
+			switch errUpdate.Error() {
+			case "unauthorized":
+				uiLoginUser("La sesión de usuario ha cadudado.")
+			case "user not found":
+				uiLoginUser("No se ha podido obtener la configuración.")
+			default:
+				uiUserMainMenu("No se ha podido cambiar la configuración.")
+			}
+		} else {
+			uiUserConfiguration("")
+		}
 	case inputSelectionStr == "0":
 		uiUserMainMenu("")
 	default:
-		uiUserConfiguration("* La opción elegida no es correcta")
+		uiUserConfiguration("La opción elegida no es correcta")
 	}
-}
-
-/*
-
-
-
-
-func uiServiceMenu(fromError string, accountSelectionStr string) {
-	clearScreen()
-
-	accountDetails, errStr := detallesCuenta(httpClient, accountSelectionStr)
-	checkErrors(errStr)
-
-	fmt.Printf("# Detalles de cuenta [%s]\n\n", accountSelectionStr)
-	fmt.Printf("--------------------------------\n\n")
-	// Si los detalles de la cuenta están vacios
-	if (model.Account{}) == accountDetails {
-		// Volvemos al menú del usuario
-		uiUserMainMenu("No existe la cuenta seleccionada")
-	}
-	// Desencriptamos la contraseña para mostrarla
-	plainPass := string(utils.Decrypt(utils.Decode64(accountDetails.Password), keyData))
-	// Mostramos los detalles de la cuenta
-	fmt.Printf("[%s] -> (%s / %s)\n", accountSelectionStr, accountDetails.User, plainPass)
-	fmt.Printf("\n--------------------------------\n\n")
-
-	var inputSelectionStr string
-	fmt.Println("1. Modificar usuario")
-	fmt.Println("2. Borrar cuenta")
-	fmt.Println("0. Volver")
-
-	if fromError != "" {
-		fmt.Printf("\n* %s", fromError)
-	}
-	fmt.Printf("\nSeleccione una opción: ")
-	inputSelectionStr = utils.CustomScanf()
-
-	switch {
-	case inputSelectionStr == "1":
-		uiModifyAccount("", accountSelectionStr)
-	case inputSelectionStr == "2":
-		uiDeleteAccount("", accountSelectionStr)
-	case inputSelectionStr == "0":
-		uiUserMainMenu("")
-	default:
-		uiServiceMenu("La opción elegida no es correcta", accountSelectionStr)
-	}
-}
-
-func uiModifyAccount(fromError string, nombreServicio string) {
-	clearScreen()
-
-	var inputAccountUser string
-	var inputAccountPassword string
-	fmt.Printf("# Editar usuario de cuenta\n\n")
-	if fromError != "" {
-		fmt.Printf("* %s\n\n", fromError)
-	}
-
-	fmt.Printf("Introduce el nombre de la cuenta  %s: ", nombreServicio)
-	inputAccountUser = utils.CustomScanf()
-
-	fmt.Printf("Introduce la contraseña la cuenta %s: ", nombreServicio)
-	inputAccountPassword = utils.CustomScanf()
-
-	modificarCuenta(httpClient, inputAccountUser, inputAccountPassword, nombreServicio)
-	uiUserMainMenu("")
-}
-
-func uiDeleteAccount(fromError string, nombreServicio string) {
-
-	var inputDecission string
-	fmt.Print("¿Estás seguro? (si, no): ")
-	inputDecission = utils.CustomScanf()
-
-	if inputDecission == "si" {
-		eliminarCuenta(httpClient, nombreServicio)
-	}
-
-	uiUserMainMenu("")
-}
-
-func uiDeleteUser(fromError string) {
-
-	var inputDecission string
-	fmt.Print("¿Estás seguro? (si, no): ")
-	inputDecission = utils.CustomScanf()
-
-	if inputDecission == "si" {
-		_, _, errStr := eliminarUsuario(httpClient)
-		checkErrors(errStr)
-	}
-
-	uiInicio("")
-}*/
-
-// Logout externo
-func UIlogout() {
-	os.Exit(0)
 }

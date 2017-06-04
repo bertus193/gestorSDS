@@ -27,7 +27,7 @@ func registroUsuario(w http.ResponseWriter, req *http.Request) {
 	pass := req.Form.Get("pass")
 
 	// Logs
-	utils.AddLog(logFile, "registroUsuario: ["+email+", "+pass+"]")
+	utils.AddLog("registroUsuario: [" + email + ", " + pass + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -59,7 +59,7 @@ func loginUsuario(w http.ResponseWriter, req *http.Request) {
 	email := req.Form.Get("email")
 	passw := req.Form.Get("pass")
 
-	utils.AddLog(logFile, "loginUsuario: ["+email+", "+passw+"]")
+	utils.AddLog("loginUsuario: [" + email + ", " + passw + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -102,7 +102,7 @@ func desbloquearA2F(w http.ResponseWriter, req *http.Request) {
 	a2fcode := req.Form.Get("a2fcode")
 
 	// Logs
-	utils.AddLog(logFile, "desbloquearA2F: ["+token+", "+a2fcode+"]")
+	utils.AddLog("desbloquearA2F: [" + token + ", " + a2fcode + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -138,7 +138,7 @@ func listarCuentas(w http.ResponseWriter, req *http.Request) {
 	token := req.Form.Get("token")
 
 	// Logs
-	utils.AddLog(logFile, "listarCuentas: ["+token+"]")
+	utils.AddLog("listarCuentas: [" + token + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -169,7 +169,7 @@ func crearEntrada(w http.ResponseWriter, req *http.Request) {
 	passServicio := req.Form.Get("passwordCuenta")
 
 	// Logs
-	utils.AddLog(logFile, "crearCuenta: ["+token+", "+nombreServicio+", "+usuarioServicio+", "+passServicio+"]")
+	utils.AddLog("crearCuenta: [" + token + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -206,7 +206,7 @@ func modificarUsuario(w http.ResponseWriter, req *http.Request) {
 	token := req.Form.Get("token")
 	passAnterior := req.Form.Get("passAnterior")
 	passNuevo := req.Form.Get("passNuevo")
-	utils.AddLog(logFile, "modificarUsuario: ["+token+", "+passAnterior+", "+passNuevo+"]")
+	utils.AddLog("modificarUsuario: [" + token + ", " + passAnterior + ", " + passNuevo + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -229,7 +229,7 @@ func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	utils.AddLog(logFile, "eliminarUsuario: ["+token+"]")
+	utils.AddLog("eliminarUsuario: [" + token + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -255,7 +255,7 @@ func modificarCuenta(w http.ResponseWriter, req *http.Request) {
 	nombreServicio := req.Form.Get("nombreServicio")
 	usuarioServicio := req.Form.Get("usuarioServicio")
 	passServicio := req.Form.Get("passServicio")
-	utils.AddLog(logFile, "modificarCuenta: ["+token+", "+nombreServicio+", "+usuarioServicio+", "+passServicio+" ]")
+	utils.AddLog("modificarCuenta: [" + token + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -279,7 +279,7 @@ func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
 	// Recuperamos los datos
 	token := req.Form.Get("token")
 	nombreServicio := req.Form.Get("nombreServicio")
-	utils.AddLog(logFile, "eliminarCuenta: ["+token+", "+nombreServicio+"]")
+	utils.AddLog("eliminarCuenta: [" + token + ", " + nombreServicio + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -303,7 +303,7 @@ func detallesCuenta(w http.ResponseWriter, req *http.Request) {
 	// Recuperamos los datos
 	token := req.Form.Get("token")
 	nombreServicio := req.Form.Get("nombreServicio")
-	utils.AddLog(logFile, "detallesCuenta: ["+token+", "+nombreServicio+"]")
+	utils.AddLog("detallesCuenta: [" + token + ", " + nombreServicio + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -325,7 +325,7 @@ func detallesUsuario(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	utils.AddLog(logFile, "detallesUsuario: ["+token+"]")
+	utils.AddLog("detallesUsuario: [" + token + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -355,7 +355,7 @@ func activarA2F(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	utils.AddLog(logFile, "activarA2f: ["+token+"]")
+	utils.AddLog("activarA2f: [" + token + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -377,7 +377,7 @@ func desactivarA2F(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	utils.AddLog(logFile, "desactivarA2f: ["+token+"]")
+	utils.AddLog("desactivarA2f: [" + token + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")

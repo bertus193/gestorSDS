@@ -13,16 +13,8 @@ import (
 	"github.com/bertus193/gestorSDS/utils"
 )
 
-var logFile *os.File
-
-func Init() {
-	before()
-}
-
 // Launch lanza el servidor
 func Launch() {
-
-	Init()
 
 	// suscripción SIGINT
 	stopChan := make(chan os.Signal)
@@ -57,14 +49,13 @@ func Launch() {
 	// Guarda la información de la BD en un fichero
 	database.After()
 
+	//Guarda logs en fichero
+	utils.AfterLogs()
+
 	// Apaga el servidor de forma segura
 	ctx, fnc := context.WithTimeout(context.Background(), 5*time.Second)
 	fnc()
 	srv.Shutdown(ctx)
 
 	log.Println("Servidor detenido correctamente")
-}
-
-func before() {
-	logFile = utils.NewLogFile()
 }

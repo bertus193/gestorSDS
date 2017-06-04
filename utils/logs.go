@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,7 +34,7 @@ func newLogFile() *os.File {
 	path = "./server/logs/" + currentDay + ".log"
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
-		fmt.Printf("error opening file: %v", err)
+		log.Printf("error opening file: %v", err)
 	} else {
 		bytesEntrada, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -60,12 +59,25 @@ func newLogFile() *os.File {
 
 //LaunchLogger Iniciar Desencriptación logs
 func LaunchLogger(inputFile string, outputFile string) {
+	var result []string
 	log.Println("Desencriptando fichero...")
-	_, err := ioutil.ReadFile("./server/logs/" + inputFile)
+	input, err := ioutil.ReadFile("./server/logs/" + inputFile)
 	if err != nil {
 		log.Println("El fichero introducido no existe")
 	} else {
-
+		bytesEntrada := Decrypt(input, config.PassCifrateLogs)
+		output, err := os.Create("./server/logs/" + outputFile)
+		if err != nil {
+			log.Println("error opening file: %v", err)
+		} else {
+			if err := json.Unmarshal(bytesEntrada, &result); err != nil {
+				panic(err)
+			}
+			for i := 0; i < len(result); i++ {
+				output.Write([]byte(result[i] + "\n"))
+			}
+			log.Println("El fichero \"/server/logs/" + outputFile + "\" ha sido creado correctamente")
+		}
 	}
 }
 
@@ -80,7 +92,7 @@ func AfterLogs() {
 	j, err := json.Marshal(logSlice)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	} else if config.CifrateLogs == true {
 		bytesSalida := Encrypt(j, config.PassCifrateLogs)
 		logFile.Write(bytesSalida)

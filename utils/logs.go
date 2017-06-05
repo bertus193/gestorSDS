@@ -14,6 +14,8 @@ var logFile *os.File
 var logSlice []string
 var path string
 
+var firstLog = false
+
 //init iniciar servidor (automaticamente llama a init)
 func init() {
 	logFile = newLogFile()
@@ -22,7 +24,13 @@ func init() {
 //AddLog Nueva linea al log
 func AddLog(logMessage string) {
 	log.Println(logMessage)
-	logMessage = time.Now().Format("2006-01-02 15:04:05") + " " + logMessage
+
+	date := time.Now().Format("2006-01-02 15:04:05")
+	if firstLog == false {
+		logSlice = append(logSlice, "\n"+date+" log:")
+		firstLog = true
+	}
+	logMessage = date + " " + logMessage
 	logSlice = append(logSlice, logMessage)
 
 }
@@ -40,7 +48,7 @@ func newLogFile() *os.File {
 	path = "./server/logs/" + currentDay + ".log"
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
-		log.Printf("1error opening file: %v", err)
+		log.Printf("error opening file: %v", err)
 	} else {
 		bytesEntrada, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -77,14 +85,17 @@ func LaunchLogger(inputFile string, outputFile string) {
 	if err != nil {
 		log.Println("El fichero introducido no existe")
 	} else {
-		bytesEntrada := Decrypt(input, config.PassEncryptLogs)
+		if err := json.Unmarshal(input, &result); err != nil {
+			input = Decrypt(input, config.PassEncryptLogs)
+			if err := json.Unmarshal(input, &result); err != nil {
+				panic(err)
+			}
+		}
+
 		output, err := os.Create("./server/logs/" + outputFile)
 		if err != nil {
 			log.Println("error opening file: %v", err)
 		} else {
-			if err := json.Unmarshal(bytesEntrada, &result); err != nil {
-				panic(err)
-			}
 			for i := 0; i < len(result); i++ {
 				output.Write([]byte(result[i] + "\n"))
 			}

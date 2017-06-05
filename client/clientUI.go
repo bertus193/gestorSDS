@@ -257,6 +257,7 @@ func uiAddNewEntry(fromError string) {
 	// Solicitamos información de lo que queremos guardar de entre las posibles
 	fmt.Println("1. Texto")
 	fmt.Println("2. Cuenta de usuario")
+	fmt.Println("0. Volver")
 	fmt.Printf("\nSeleccione una opción: ")
 	inputEntryMode := utils.CustomScanf()
 
@@ -265,6 +266,8 @@ func uiAddNewEntry(fromError string) {
 		uiAddNewTextEntry("")
 	case "2":
 		uiAddNewAccountEntry("")
+	case "0":
+		uiUserMainMenu("", "")
 	default:
 		uiAddNewEntry("La opción elegida no es correcta.")
 	}
@@ -303,7 +306,7 @@ func uiAddNewTextEntry(fromError string) {
 			uiUserMainMenu("Ocurrio un error al añadir la entrada el código.", "")
 		}
 	} else {
-		uiUserMainMenu("", "Entrada ["+inputTitle+"] añadida correctamente")
+		uiUserMainMenu("", "Texto ["+inputTitle+"] añadido correctamente")
 	}
 }
 

@@ -180,13 +180,13 @@ func crearEntrada(w http.ResponseWriter, req *http.Request) {
 		if mode == "0" {
 			// Si es una entrada de tipo texto
 			textoEntrada := req.Form.Get("textoEntrada")
-			database.CreateTextVaultEntry(email, tituloEntrada, textoEntrada)
+			errCreate = database.CreateTextVaultEntry(email, tituloEntrada, textoEntrada)
 
 		} else if mode == "1" {
 			// Si es una entrada de tipo cuenta de usuario
 			usuarioEntradaCuenta := req.Form.Get("usuarioCuenta")
 			passwordEntradaCuenta := req.Form.Get("passwordCuenta")
-			database.CreateAccountVaultEntry(email, tituloEntrada, usuarioEntradaCuenta, passwordEntradaCuenta)
+			errCreate = database.CreateAccountVaultEntry(email, tituloEntrada, usuarioEntradaCuenta, passwordEntradaCuenta)
 		}
 
 		// Respondemos

@@ -102,7 +102,7 @@ func uiLoginUser(fromError string) {
 
 	// Mensaje de error en caso de existir
 	if fromError != "" {
-		fmt.Printf("* %s\n\n", fromError)
+		color.Red("* %s\n\n", fromError)
 	}
 
 	// Lectura de datos del usuario
@@ -117,19 +117,19 @@ func uiLoginUser(fromError string) {
 		// Si hay un error, mostramos el mensaje de error adecuado
 		switch err.Error() {
 		case "user not found":
-			uiLoginUser("No exite ningún usuario con esos datos.")
+			uiInicio("No exite ningún usuario con esos datos.")
 		case "passwords do not match":
 			// No damos información detallada del error en este caso
-			uiLoginUser("No exite ningún usuario con esos datos.")
+			uiInicio("No exite ningún usuario con esos datos.")
 		case "a2f required":
 			uiUnlockA2F("")
 		default:
-			uiLoginUser("Ocurrio un error al realizar el login.")
+			uiInicio("Ocurrio un error al realizar el login.")
 		}
 
 	} else {
 		// Login completado, vamos a la pantalla principal del usuario
-		uiUserMainMenu("")
+		uiUserMainMenu("", "")
 	}
 }
 
@@ -159,7 +159,7 @@ func uiUnlockA2F(fromError string) {
 		case "session not found":
 			uiLoginUser("La sesión de usuario ha cadudado.")
 		case "2fa already resolved":
-			uiUserMainMenu("")
+			uiUserMainMenu("", "")
 		case "2fa expired":
 			uiLoginUser("El código de verificación en dos pasos ha caducado.")
 		case "incorrect 2fa code":
@@ -168,17 +168,27 @@ func uiUnlockA2F(fromError string) {
 			uiUnlockA2F("Ocurrio un error verificar el código.")
 		}
 	} else {
-		uiUserMainMenu("")
+		//Desbloqueado con exito
+		uiUserMainMenu("", "")
 	}
 }
 
-func uiUserMainMenu(fromError string) {
+func uiUserMainMenu(fromError string, fromMessage string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
 
 	// Título de la pantalla
-	fmt.Printf("# Página de usuario\n\n")
+	fmt.Printf("# Página de usuario\n")
+
+	// Mensaje de error en caso de existir
+	if fromError != "" {
+		color.Red("* %s", fromError)
+	} else if fromMessage != "" {
+		color.Green("* %s", fromMessage)
+	} else {
+		fmt.Printf("\n")
+	}
 
 	// Recuperamos las cuentas del usuario
 	fmt.Printf("------ Listado de entradas ------\n\n")
@@ -210,11 +220,6 @@ func uiUserMainMenu(fromError string) {
 	fmt.Println("3. Configuración de mi cuenta")
 	fmt.Println("0. Salir")
 
-	// Mensaje de error en caso de existir
-	if fromError != "" {
-		fmt.Printf("\n* %s", fromError)
-	}
-
 	// Lectura de opción elegida
 	fmt.Printf("\nSeleccione una opción: ")
 	inputSelectionStr := utils.CustomScanf()
@@ -230,9 +235,9 @@ func uiUserMainMenu(fromError string) {
 	case inputSelectionStr == "3":
 		uiUserConfiguration("")
 	case inputSelectionStr == "0":
-		os.Exit(0)
+		uiInicio("")
 	default:
-		uiUserMainMenu("La opción elegida no es correcta")
+		uiUserMainMenu("La opción elegida no es correcta", "")
 	}
 }
 
@@ -275,7 +280,7 @@ func uiAddNewTextEntry(fromError string) {
 
 	// Mensaje de error en caso de existir
 	if fromError != "" {
-		fmt.Printf("* %s\n\n", fromError)
+		color.Red("* %s\n\n", fromError)
 	}
 
 	// Lectura de los datos de la nueva entrada
@@ -292,13 +297,13 @@ func uiAddNewTextEntry(fromError string) {
 			uiLoginUser("La sesión de usuario ha cadudado.")
 		case "user not found":
 			uiLoginUser("Ha ocurrido un error al guardar la entrada en tu cuenta.")
-		case "2fa expired":
-			uiAddNewEntry("Ya existe una entrada con ese título.")
+		case "entry already exists":
+			uiUserMainMenu("Ya existe una entrada con ese título.", "")
 		default:
-			uiUserMainMenu("Ocurrio un error al añadir la entrada el código.")
+			uiUserMainMenu("Ocurrio un error al añadir la entrada el código.", "")
 		}
 	} else {
-		uiUserMainMenu("")
+		uiUserMainMenu("", "Entrada ["+inputTitle+"] añadida correctamente")
 	}
 }
 
@@ -322,34 +327,49 @@ func uiAddNewAccountEntry(fromError string) {
 	inputAccountUser := utils.CustomScanf()
 	fmt.Print("¿Deseas generar una contraseña? (si, no): ")
 	inputGeneratePassw := utils.CustomScanf()
+
 	var finalPassw string
+	var inputGenPassDecission string
+	var outGenPass = false
+	var outLength = false
+
 	if inputGeneratePassw == "si" || inputGeneratePassw == "s" {
 
 		// Solicitamos información de como se desea generar la contraseña
 
 		// Tamaño de la contraseña
 		var genLenght int
-		for {
-			fmt.Print("¿Que tamaño de contraseña deseas? ")
-			inputLenght := utils.CustomScanf()
-			if convLenght, err := strconv.Atoi(inputLenght); err == nil {
-				genLenght = convLenght
-				break
+		for outGenPass == false {
+			for outLength == false {
+				fmt.Print("¿Que tamaño de contraseña deseas?: ")
+				inputLenght := utils.CustomScanf()
+				if convLenght, err := strconv.Atoi(inputLenght); err == nil {
+					genLenght = convLenght
+					break
+				}
+			}
+
+			// La contraseña generada puede tener números
+			fmt.Print("¿Deseas que tenga números? (si, no): ")
+			inputWithNums := utils.CustomScanf()
+			genWithNums := inputWithNums == "si" || inputWithNums == "s"
+
+			// La contraseña generada puede tener simbolos
+			fmt.Print("¿Deseas que tenga símbolos? (si, no): ")
+			inputWithSymbols := utils.CustomScanf()
+			genWithSymbols := inputWithSymbols == "si" || inputWithSymbols == "s"
+
+			finalPassw = utils.GeneratePassword(genLenght, true, genWithNums, genWithSymbols)
+
+			fmt.Println("La contraseña es: " + finalPassw)
+			fmt.Print("¿Estás de acuerdo? (si, no): ")
+			fmt.Scanf("%s", &inputGenPassDecission)
+
+			if inputGenPassDecission == "si" {
+				outGenPass = true
+
 			}
 		}
-
-		// La contraseña generada puede tener números
-		fmt.Print("¿Deseas que tenga números? (si, no): ")
-		inputWithNums := utils.CustomScanf()
-		genWithNums := inputWithNums == "si" || inputWithNums == "s"
-
-		// La contraseña generada puede tener simbolos
-		fmt.Print("¿Deseas que tenga símbolos? (si, no): ")
-		inputWithSymbols := utils.CustomScanf()
-		genWithSymbols := inputWithSymbols == "si" || inputWithSymbols == "s"
-
-		finalPassw = utils.GeneratePassword(genLenght, true, genWithNums, genWithSymbols)
-
 	} else {
 		fmt.Print("Contraseña: ")
 		finalPassw = utils.GetPassw()
@@ -363,13 +383,13 @@ func uiAddNewAccountEntry(fromError string) {
 			uiLoginUser("La sesión de usuario ha cadudado.")
 		case "user not found":
 			uiLoginUser("Ha ocurrido un error al guardar la entrada en tu cuenta.")
-		case "2fa expired":
-			uiAddNewEntry("Ya existe una entrada con ese título.")
+		case "entry already exists":
+			uiUserMainMenu("Ya existe una entrada con ese título.", "")
 		default:
-			uiUserMainMenu("Ocurrio un error al añadir la entrada el código.")
+			uiUserMainMenu("Ocurrio un error al añadir la entrada el código.", "")
 		}
 	} else {
-		uiUserMainMenu("")
+		uiUserMainMenu("", "Cuenta ["+inputAccountType+"] añadida correctamente")
 	}
 }
 
@@ -390,7 +410,7 @@ func uiDetailsEntry(fromError string, entryName string) {
 		case "unauthorized":
 			uiLoginUser("La sesión de usuario ha cadudado.")
 		case "not found":
-			uiUserMainMenu("No se han podido obtener detalles de la cuenta elegida.")
+			uiUserMainMenu("No se han podido obtener detalles de la cuenta elegida.", "")
 		default:
 			fmt.Println("Ocurrió un error al recuperar las entradas." + err.Error())
 		}
@@ -398,7 +418,7 @@ func uiDetailsEntry(fromError string, entryName string) {
 		// Si los detalles de la cuenta están vacios
 		if (model.VaultEntry{}) == entry {
 			// Volvemos al menú del usuario
-			uiUserMainMenu("No se han podido obtener detalles de la cuenta elegida.")
+			uiUserMainMenu("No se han podido obtener detalles de la cuenta elegida.", "")
 		}
 
 		// Comprobamos el tipo de entrada (texto, cuenta) y la mostramos
@@ -440,20 +460,20 @@ func uiDetailsEntry(fromError string, entryName string) {
 				case "unauthorized":
 					uiLoginUser("La sesión de usuario ha cadudado.")
 				case "not found":
-					uiUserMainMenu("No se ha podido borrar la entrada.")
+					uiUserMainMenu("No se ha podido borrar la entrada.", "")
 				default:
 					fmt.Println("Ocurrió un error al borrar la entrada." + err.Error())
 				}
 
 			} else {
 				// Se ha eliminado correctamente
-				uiUserMainMenu("")
+				uiUserMainMenu("", "Entrada ["+entryName+"] eliminada correctamente")
 			}
 		} else {
 			uiDetailsEntry("", entryName)
 		}
 	case inputSelectionStr == "0":
-		uiUserMainMenu("")
+		uiUserMainMenu("", "")
 	default:
 		uiDetailsEntry("La opción elegida no es correcta", entryName)
 	}
@@ -478,7 +498,7 @@ func uiUserConfiguration(fromError string) {
 		case "user not found":
 			uiLoginUser("No se ha podido obtener la información del usuario.")
 		case "unable to unmarshal":
-			uiUserMainMenu("No se ha podido mostrar la información del usuario.")
+			uiUserMainMenu("No se ha podido mostrar la información del usuario.", "")
 		default:
 			fmt.Println("Ocurrió un error al recuperar los detalles." + err.Error())
 		}
@@ -551,13 +571,13 @@ func uiUserConfiguration(fromError string) {
 			case "user not found":
 				uiLoginUser("No se ha podido obtener la configuración.")
 			default:
-				uiUserMainMenu("No se ha podido cambiar la configuración.")
+				uiUserMainMenu("No se ha podido cambiar la configuración.", "")
 			}
 		} else {
 			uiUserConfiguration("")
 		}
 	case inputSelectionStr == "0":
-		uiUserMainMenu("")
+		uiUserMainMenu("", "")
 	default:
 		uiUserConfiguration("La opción elegida no es correcta")
 	}

@@ -51,7 +51,7 @@ func newLogFile() *os.File {
 
 			}
 			if err := json.Unmarshal(bytesEntrada, &result); err != nil {
-				bytesEntrada = Decrypt(bytesEntrada, config.PassEncryptLogs)
+				bytesEntrada = DecryptAES(bytesEntrada, config.PassEncryptLogs)
 				if err := json.Unmarshal(bytesEntrada, &result); err != nil {
 					panic(err)
 				}
@@ -77,7 +77,7 @@ func LaunchLogger(inputFile string, outputFile string) {
 	if err != nil {
 		log.Println("El fichero introducido no existe")
 	} else {
-		bytesEntrada := Decrypt(input, config.PassEncryptLogs)
+		bytesEntrada := DecryptAES(input, config.PassEncryptLogs)
 		output, err := os.Create("./server/logs/" + outputFile)
 		if err != nil {
 			log.Println("error opening file: %v", err)
@@ -106,7 +106,7 @@ func AfterLogs() {
 	if err != nil {
 		log.Println(err)
 	} else if config.EncryptLogs == true {
-		bytesSalida := Encrypt(j, config.PassEncryptLogs)
+		bytesSalida := EncryptAES(j, config.PassEncryptLogs)
 		logFile.Write(bytesSalida)
 	} else {
 		logFile.Write(j)

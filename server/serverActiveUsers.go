@@ -67,7 +67,6 @@ func UnlockSessionWith2FA(token string, code2FA string) error {
 		resetSessionExpireTime(token)
 	}
 	return err
-
 }
 
 // GetUserFromSession recupera el correo electrónico del usuario
@@ -126,7 +125,7 @@ func isSessionExpired(token string) bool {
 // el que use el usuario al realizar las peticiones.
 func generateSessionToken() string {
 	tokenRaw, _ := utils.GenerateRandomBytes(24)
-	tokenSrc := utils.Encode64(tokenRaw)
+	tokenSrc := utils.EncodeBase64(tokenRaw)
 	return tokenSrc
 }
 

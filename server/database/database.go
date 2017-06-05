@@ -32,8 +32,8 @@ func before() {
 		//fileData := []byte("{}")
 		ioutil.WriteFile("./server/database/bd.txt", []byte(""), 0644)
 	} else {
-		decompress := []byte(utils.Decompress(bytesEntrada))
-		decompress = utils.Decrypt(decompress, config.PassDBEncrypt)
+		decompress := []byte(utils.ZLibDecompress(bytesEntrada))
+		decompress = utils.DecryptAES(decompress, config.PassDBEncrypt)
 		if err := json.Unmarshal(decompress, &result); err != nil {
 			panic("Error al leer fichero de entrada")
 		}
@@ -57,7 +57,7 @@ func CreateUser(email string, passw string) error {
 	} else {
 		// Hash de la contraseña también en servidor
 		bytePass := []byte(passw)
-		hashPass, _ := utils.DeriveKey(bytePass, salt)
+		hashPass, _ := utils.HashScrypt(bytePass, salt)
 		saltBase64 := base64.StdEncoding.EncodeToString(salt)
 
 		// Guardamos el nuevo usuario
@@ -87,7 +87,7 @@ func GetUser(email string, passw string) (*model.Usuario, error) {
 	} else {
 		// Regeneramos el hash de servidor de la contraseña
 		bytePass := []byte(passw)
-		if hashPass, errHash := utils.DeriveKey(bytePass, salt); errHash != nil {
+		if hashPass, errHash := utils.HashScrypt(bytePass, salt); errHash != nil {
 			// Error al regenerar el hash
 			errResult = errors.New("unable to recover")
 		} else if user.UserPassword != string(hashPass) {
@@ -265,8 +265,8 @@ func After() {
 	}
 
 	//usuarios := string(j)
-	usuarios := string(utils.Encrypt(j, config.PassDBEncrypt)) //Encriptar
-	usuarios = utils.Compress(usuarios)                        //Comprimir
+	usuarios := string(utils.EncryptAES(j, config.PassDBEncrypt)) //Encriptar
+	usuarios = utils.ZLibCompress(usuarios)                       //Comprimir
 
 	salida.Write([]byte(usuarios))
 }

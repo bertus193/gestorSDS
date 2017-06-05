@@ -1,7 +1,6 @@
 package client
 
 import (
-	"crypto/sha512"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -25,12 +24,12 @@ func registroUsuario(client *http.Client, email string, pass string) error {
 	data := url.Values{}
 
 	// Generamos el hash de la contraseña introducida
-	keyClient := sha512.Sum512([]byte(pass))
+	keyClient := utils.HashSha512([]byte(pass))
 	// Usamos solo la primera parte para identificarnos
-	keyRegister := keyClient[0:31]
+	keyRegister := keyClient[0:31] // Si es un slice, debería ser [0:32] y [32:64] ¿?
 
 	data.Set("email", email)
-	data.Set("pass", utils.Encode64(keyRegister))
+	data.Set("pass", utils.EncodeBase64(keyRegister))
 
 	// Realizamos la petición
 	response, err := client.PostForm(baseURL+"/usuario/registro", data)
@@ -63,8 +62,8 @@ func loginUsuario(client *http.Client, email string, pass string) error {
 	data := url.Values{}
 	data.Set("email", email)
 
-	keyClient := sha512.Sum512([]byte(pass))
-	keyLogin := utils.Encode64(keyClient[0:31])
+	keyClient := utils.HashSha512([]byte(pass))
+	keyLogin := utils.EncodeBase64(keyClient[0:31]) // Si es un slice, debería ser [0:32] y [32:64] ¿?
 	keyData = keyClient[32:64]
 
 	data.Set("pass", keyLogin)
@@ -203,7 +202,7 @@ func crearEntradaDeTexto(client *http.Client, tituloEntrada string, textoEntrada
 	data.Set("mode", "0") // Mode 0 - Texto
 	data.Set("tituloEntrada", tituloEntrada)
 
-	encryptText := utils.Encode64(utils.Encrypt([]byte(textoEntrada), keyData))
+	encryptText := utils.EncodeBase64(utils.CipherSalsa20([]byte(textoEntrada), keyData, []byte(tituloEntrada)))
 	data.Set("textoEntrada", encryptText)
 
 	// Realizamos la petición
@@ -247,7 +246,7 @@ func crearEntradaDeCuenta(client *http.Client, tituloEntrada string, usuario str
 	data.Set("tituloEntrada", tituloEntrada)
 	data.Set("usuarioCuenta", usuario)
 
-	encryptPassServicio := utils.Encode64(utils.Encrypt([]byte(password), keyData))
+	encryptPassServicio := utils.EncodeBase64(utils.CipherSalsa20([]byte(password), keyData, []byte(tituloEntrada)))
 	data.Set("passwordCuenta", encryptPassServicio)
 
 	// Realizamos la petición
@@ -326,7 +325,7 @@ func detallesEntrada(client *http.Client, tituloEntrada string) (model.VaultEntr
 						// Desciframos el texto
 						detailResult = model.VaultEntry{
 							Mode: 0, // Text
-							Text: string(utils.Decrypt(utils.Decode64(tempEntry.Text), keyData)),
+							Text: string(utils.CipherSalsa20(utils.DecodeBase64(tempEntry.Text), keyData, []byte(tituloEntrada))),
 						}
 
 					} else if tempEntry.Mode == 1 {
@@ -335,7 +334,7 @@ func detallesEntrada(client *http.Client, tituloEntrada string) (model.VaultEntr
 						detailResult = model.VaultEntry{
 							Mode:     1, // Account
 							User:     tempEntry.User,
-							Password: string(utils.Decrypt(utils.Decode64(tempEntry.Password), keyData)),
+							Password: string(utils.CipherSalsa20(utils.DecodeBase64(tempEntry.Password), keyData, []byte(tituloEntrada))),
 						}
 					}
 				}

@@ -74,7 +74,7 @@ func uiRegistroUsuario(fromError string) {
 	fmt.Print("Email: ")
 	inputUser := utils.CustomScanf()
 	fmt.Print("Contraseña: ")
-	inputPass := utils.GetPassw()
+	inputPass := utils.CustomScanf()
 
 	// Petición al servidor
 	if err := registroUsuario(httpClient, inputUser, inputPass); err != nil {
@@ -109,7 +109,7 @@ func uiLoginUser(fromError string) {
 	fmt.Print("Email: ")
 	inputUser := utils.CustomScanf()
 	fmt.Print("Contraseña: ")
-	inputPass := utils.GetPassw()
+	inputPass := utils.CustomScanf()
 
 	// Petición al servidor
 	if err := loginUsuario(httpClient, inputUser, inputPass); err != nil {
@@ -329,19 +329,14 @@ func uiAddNewAccountEntry(fromError string) {
 	inputGeneratePassw := utils.CustomScanf()
 
 	var finalPassw string
-	var inputGenPassDecission string
-	var outGenPass = false
-	var outLength = false
-
 	if inputGeneratePassw == "si" || inputGeneratePassw == "s" {
 
 		// Solicitamos información de como se desea generar la contraseña
-
-		// Tamaño de la contraseña
-		var genLenght int
-		for outGenPass == false {
-			for outLength == false {
-				fmt.Print("¿Que tamaño de contraseña deseas?: ")
+		for {
+			// Tamaño de la contraseña
+			var genLenght int
+			for {
+				fmt.Print("¿Que tamaño de contraseña deseas? ")
 				inputLenght := utils.CustomScanf()
 				if convLenght, err := strconv.Atoi(inputLenght); err == nil {
 					genLenght = convLenght
@@ -359,20 +354,18 @@ func uiAddNewAccountEntry(fromError string) {
 			inputWithSymbols := utils.CustomScanf()
 			genWithSymbols := inputWithSymbols == "si" || inputWithSymbols == "s"
 
+			// Mostramos la contraseña y preguntamos al usuario si está de acuerdo
 			finalPassw = utils.GeneratePassword(genLenght, true, genWithNums, genWithSymbols)
-
-			fmt.Println("La contraseña es: " + finalPassw)
-			fmt.Print("¿Estás de acuerdo? (si, no): ")
-			fmt.Scanf("%s", &inputGenPassDecission)
-
-			if inputGenPassDecission == "si" {
-				outGenPass = true
-
+			fmt.Printf("La contraseña es: %s\n¿Estás de acuerdo? (si, no): ", finalPassw)
+			inputConfirm := utils.CustomScanf()
+			if inputConfirm == "si" || inputConfirm == "s" {
+				break
 			}
 		}
+
 	} else {
 		fmt.Print("Contraseña: ")
-		finalPassw = utils.GetPassw()
+		finalPassw = utils.CustomScanf()
 	}
 
 	// Petición al servidor

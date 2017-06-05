@@ -23,7 +23,6 @@ func Launch() {
 	mux := http.NewServeMux()
 	mux.Handle("/usuario/login", http.HandlerFunc(loginUsuario))
 	mux.Handle("/usuario/registro", http.HandlerFunc(registroUsuario))
-	mux.Handle("/usuario/modificar", http.HandlerFunc(modificarUsuario))
 	mux.Handle("/usuario/eliminar", http.HandlerFunc(eliminarUsuario))
 	mux.Handle("/usuario/detalles", http.HandlerFunc(detallesUsuario))
 	mux.Handle("/a2f/activar", http.HandlerFunc(activarA2F))
@@ -31,9 +30,8 @@ func Launch() {
 	mux.Handle("/a2f/desbloquear", http.HandlerFunc(desbloquearA2F))
 	mux.Handle("/cuentas", http.HandlerFunc(listarCuentas))
 	mux.Handle("/vault/nueva", http.HandlerFunc(crearEntrada))
-	mux.Handle("/cuentas/modificar", http.HandlerFunc(modificarCuenta))
-	mux.Handle("/cuentas/eliminar", http.HandlerFunc(eliminarCuenta))
-	mux.Handle("/cuentas/detalles", http.HandlerFunc(detallesCuenta))
+	mux.Handle("/vault/detalles", http.HandlerFunc(detallesEntrada))
+	mux.Handle("/vault/eliminar", http.HandlerFunc(eliminarEntrada))
 
 	srv := &http.Server{Addr: config.SecureServerPort, Handler: mux}
 

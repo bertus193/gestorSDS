@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/bertus193/gestorSDS/model"
@@ -164,12 +163,63 @@ func crearEntrada(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	nombreServicio := req.Form.Get("tituloEntrada")
-	usuarioServicio := req.Form.Get("usuarioCuenta")
-	passServicio := req.Form.Get("passwordCuenta")
+	tituloEntrada := req.Form.Get("tituloEntrada")
+	mode := req.Form.Get("mode") // Indica el tipo de entrada
 
 	// Logs
-	utils.AddLog("crearCuenta: [" + token + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
+	utils.AddLog("crearCuenta: [" + token + ", " + tituloEntrada + ", " + mode + "]")
+
+	// Recogemos el email del usuario
+	if email, errSession := GetUserFromSession(token); errSession != nil {
+		// La sesión ha caducado o no es valida
+		response(w, 401, "") // (401 - Unauthorized)
+	} else {
+
+		var errCreate error
+		// Comprobamos el tipo de entrada que estamos creando
+		if mode == "0" {
+			// Si es una entrada de tipo texto
+			textoEntrada := req.Form.Get("textoEntrada")
+			database.CreateTextVaultEntry(email, tituloEntrada, textoEntrada)
+
+		} else if mode == "1" {
+			// Si es una entrada de tipo cuenta de usuario
+			usuarioEntradaCuenta := req.Form.Get("usuarioCuenta")
+			passwordEntradaCuenta := req.Form.Get("passwordCuenta")
+			database.CreateAccountVaultEntry(email, tituloEntrada, usuarioEntradaCuenta, passwordEntradaCuenta)
+		}
+
+		// Respondemos
+		if errCreate != nil {
+
+			// Si ha ocurrido un error al insetar, comprobamos
+			// el error y respondemos con el código http adecuado
+			switch errCreate.Error() {
+			case "user not found":
+				response(w, 404, "") // (404 - Not found)
+			case "entry already exists":
+				response(w, 409, "") // (409 - Conflict)
+			default:
+				response(w, 500, "") // (500 - Internal Server Error)
+			}
+
+		} else {
+			// Devolvemos la información
+			response(w, 201, "")
+		}
+	}
+}
+
+func detallesEntrada(w http.ResponseWriter, req *http.Request) {
+	// Parseamos el formulario
+	req.ParseForm()
+
+	// Recuperamos los datos
+	token := req.Form.Get("token")
+	tituloEntrada := req.Form.Get("tituloEntrada")
+
+	// Logs
+	utils.AddLog("detallesEntrada: [" + token + ", " + tituloEntrada + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
@@ -178,195 +228,145 @@ func crearEntrada(w http.ResponseWriter, req *http.Request) {
 	if email, errSession := GetUserFromSession(token); errSession != nil {
 		// La sesión ha caducado o no es valida
 		response(w, 401, "") // (401 - Unauthorized)
-	} else if errCreate := database.CreateAccountVaultEntry(email, nombreServicio, usuarioServicio, passServicio); errCreate != nil {
+	} else if entry, errRead := database.ReadVaultEntry(email, tituloEntrada); errRead != nil {
 
 		// Si ha ocurrido un error al insetar, comprobamos
 		// el error y respondemos con el código http adecuado
-		switch errCreate.Error() {
+		switch errRead.Error() {
 		case "user not found":
 			response(w, 404, "") // (404 - Not found)
-		case "entry already exists":
-			response(w, 409, "") // (409 - Conflict)
+		case "entry not found":
+			response(w, 404, "") // (404 - Not found)
 		default:
 			response(w, 500, "") // (500 - Internal Server Error)
 		}
 
 	} else {
 		// Devolvemos la información
-		response(w, 201, "")
-	}
-}
-
-// Modifica los datos de un usuario de la BD
-func modificarUsuario(w http.ResponseWriter, req *http.Request) {
-	// Parseamos el formulario
-	req.ParseForm()
-
-	// Recuperamos los datos
-	token := req.Form.Get("token")
-	passAnterior := req.Form.Get("passAnterior")
-	passNuevo := req.Form.Get("passNuevo")
-	utils.AddLog("modificarUsuario: [" + token + ", " + passAnterior + ", " + passNuevo + "]")
-
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-
-	// Respondemos
-	if _, err := GetUserFromSession(token); err != nil {
-		// La sesión ha caducado o no es valida
-		response(w, 401, "")
-	} else {
-		// La sesión sigue abierta, eliminamos en la BD y respondemos
-		// to-do
-		response(w, 501, "to-do")
-	}
-}
-
-// Elimina un usuario
-func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
-	// Parseamos el formulario
-	req.ParseForm()
-
-	// Recuperamos los datos
-	token := req.Form.Get("token")
-	utils.AddLog("eliminarUsuario: [" + token + "]")
-
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-
-	// Respondemos
-	if email, err := GetUserFromSession(token); err != nil {
-		// La sesión ha caducado o no es valida
-		response(w, 401, "")
-	} else {
-		// La sesión sigue abierta, eliminamos en la BD y respondemos
-		database.DeleteUser(email)
-		response(w, 200, "")
-	}
-}
-
-// Modifica usuario de una cuenta (servicio)
-func modificarCuenta(w http.ResponseWriter, req *http.Request) {
-	// Parseamos el formulario
-	req.ParseForm()
-
-	// Recuperamos los datos (servicio)
-	token := req.Form.Get("token")
-	nombreServicio := req.Form.Get("nombreServicio")
-	usuarioServicio := req.Form.Get("usuarioServicio")
-	passServicio := req.Form.Get("passServicio")
-	utils.AddLog("modificarCuenta: [" + token + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + " ]")
-
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-
-	// Respondemos
-	if email, err := GetUserFromSession(token); err != nil {
-		// La sesión ha caducado o no es valida
-		response(w, 401, "")
-	} else {
-		// La sesión sigue abierta, modificamos en la BD y respondemos
-		database.SetAccount(email, nombreServicio, usuarioServicio, passServicio)
-		response(w, 200, "")
+		if entryJSON, errJSON := json.Marshal(entry); errJSON != nil {
+			response(w, 500, "") // (500 - Internal Server Error)
+		} else {
+			response(w, 201, string(entryJSON))
+		}
 	}
 }
 
 // Elimina una cuenta de servicio a un usuario de la BD
-func eliminarCuenta(w http.ResponseWriter, req *http.Request) {
+func eliminarEntrada(w http.ResponseWriter, req *http.Request) {
+
 	// Parseamos el formulario
 	req.ParseForm()
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	nombreServicio := req.Form.Get("nombreServicio")
-	utils.AddLog("eliminarCuenta: [" + token + ", " + nombreServicio + "]")
+	tituloEntrada := req.Form.Get("tituloEntrada")
+
+	// Logs
+	utils.AddLog("eliminarEntrada: [" + token + ", " + tituloEntrada + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 
 	// Respondemos
-	if email, err := GetUserFromSession(token); err != nil {
+	if email, errSession := GetUserFromSession(token); errSession != nil {
 		// La sesión ha caducado o no es valida
-		response(w, 401, "")
+		response(w, 401, "") // (401 - Unauthorized)
+	} else if errDelete := database.DeleteVaultEntry(email, tituloEntrada); errDelete != nil {
+
+		// Si ha ocurrido un error al borrar, comprobamos
+		// el error y respondemos con el código http adecuado
+		switch errDelete.Error() {
+		case "user not found":
+			response(w, 404, "") // (404 - Not found)
+		case "entry not found":
+			response(w, 404, "") // (404 - Not found)
+		default:
+			response(w, 500, "") // (500 - Internal Server Error)
+		}
+
 	} else {
-		// La sesión sigue abierta, eliminamos en la BD y respondemos
-		database.DeleteAccount(email, nombreServicio)
+		// Devolvemos la información
 		response(w, 200, "")
 	}
 }
 
-// Recupera los detalles de una cuenta de servicio a un usuario de la BD
-func detallesCuenta(w http.ResponseWriter, req *http.Request) {
-	// Parseamos el formulario
-	req.ParseForm()
-
-	// Recuperamos los datos
-	token := req.Form.Get("token")
-	nombreServicio := req.Form.Get("nombreServicio")
-	utils.AddLog("detallesCuenta: [" + token + ", " + nombreServicio + "]")
-
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-
-	// Respondemos
-	if email, err := GetUserFromSession(token); err != nil {
-		// La sesión ha caducado o no es valida
-		response(w, 401, "")
-	} else {
-		// La sesión sigue abierta, devolvemos la información
-		accountInfo := database.GetJSONAccountFromUser(email, nombreServicio)
-		response(w, 200, accountInfo)
-	}
-}
-
 func detallesUsuario(w http.ResponseWriter, req *http.Request) {
+
 	// Parseamos el formulario
 	req.ParseForm()
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
+
+	// Logs
 	utils.AddLog("detallesUsuario: [" + token + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 
 	// Respondemos
-	if email, err := GetUserFromSession(token); err != nil {
+	if email, errSession := GetUserFromSession(token); errSession != nil {
 		// La sesión ha caducado o no es valida
-		response(w, 401, "")
+		response(w, 401, "") // (401 - Unauthorized)
+	} else if user, errRead := database.ReadUser(email); errRead != nil {
+
+		// Si ha ocurrido un error al insetar, comprobamos
+		// el error y respondemos con el código http adecuado
+		switch errRead.Error() {
+		case "user not found":
+			response(w, 404, "") // (404 - Not found)
+		default:
+			response(w, 500, "") // (500 - Internal Server Error)
+		}
+
 	} else {
-		// La sesión sigue abierta, devolvemos la información
-		user, _ := database.GetUserFromEmail(email)
-		log.Println(user.A2FEnabled)
 
 		details := model.DetallesUsuario{
 			Email:      email,
 			A2FEnabled: user.A2FEnabled,
 			NumEntries: len(user.Vault),
 		}
-		jsonString, _ := json.Marshal(details)
-		response(w, 200, string(jsonString))
+
+		if userJSON, errJSON := json.Marshal(details); errJSON != nil {
+			response(w, 500, "") // (500 - Internal Server Error)
+		} else {
+			response(w, 200, string(userJSON))
+		}
 	}
 }
 
 func activarA2F(w http.ResponseWriter, req *http.Request) {
+
 	// Parseamos el formulario
 	req.ParseForm()
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	utils.AddLog("activarA2f: [" + token + "]")
+	tituloEntrada := req.Form.Get("tituloEntrada")
+
+	// Logs
+	utils.AddLog("activarA2F: [" + token + ", " + tituloEntrada + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 
 	// Respondemos
-	if email, err := GetUserFromSession(token); err != nil {
+	if email, errSession := GetUserFromSession(token); errSession != nil {
 		// La sesión ha caducado o no es valida
-		response(w, 401, "")
+		response(w, 401, "") // (401 - Unauthorized)
+	} else if errToggle := database.UpdateA2F(email, true); errToggle != nil {
+
+		// Si ha ocurrido un error al cambiar el valor, comprobamos
+		// el error y respondemos con el código http adecuado
+		switch errToggle.Error() {
+		case "user not found":
+			response(w, 404, "") // (404 - Not found)
+		default:
+			response(w, 500, "") // (500 - Internal Server Error)
+		}
+
 	} else {
-		// La sesión sigue abierta, devolvemos la información
-		database.ToggleA2f(email, true)
+		// Devolvemos la confirmación
 		response(w, 200, "")
 	}
 }
@@ -377,18 +377,68 @@ func desactivarA2F(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	utils.AddLog("desactivarA2f: [" + token + "]")
+	tituloEntrada := req.Form.Get("tituloEntrada")
+
+	// Logs
+	utils.AddLog("activarA2F: [" + token + ", " + tituloEntrada + "]")
 
 	// Cabecera estándar
 	w.Header().Set("Content-Type", "text/plain")
 
 	// Respondemos
-	if email, err := GetUserFromSession(token); err != nil {
+	if email, errSession := GetUserFromSession(token); errSession != nil {
 		// La sesión ha caducado o no es valida
-		response(w, 401, "")
+		response(w, 401, "") // (401 - Unauthorized)
+	} else if errToggle := database.UpdateA2F(email, false); errToggle != nil {
+
+		// Si ha ocurrido un error al cambiar el valor, comprobamos
+		// el error y respondemos con el código http adecuado
+		switch errToggle.Error() {
+		case "user not found":
+			response(w, 404, "") // (404 - Not found)
+		default:
+			response(w, 500, "") // (500 - Internal Server Error)
+		}
+
 	} else {
-		// La sesión sigue abierta, devolvemos la información
-		database.ToggleA2f(email, false)
+		// Devolvemos la confirmación
+		response(w, 200, "")
+	}
+}
+
+// Elimina un usuario
+func eliminarUsuario(w http.ResponseWriter, req *http.Request) {
+
+	// Parseamos el formulario
+	req.ParseForm()
+
+	// Recuperamos los datos
+	token := req.Form.Get("token")
+	tituloEntrada := req.Form.Get("tituloEntrada")
+
+	// Logs
+	utils.AddLog("activarA2F: [" + token + ", " + tituloEntrada + "]")
+
+	// Cabecera estándar
+	w.Header().Set("Content-Type", "text/plain")
+
+	// Respondemos
+	if email, errSession := GetUserFromSession(token); errSession != nil {
+		// La sesión ha caducado o no es valida
+		response(w, 401, "") // (401 - Unauthorized)
+	} else if errDelete := database.DeleteUser(email); errDelete != nil {
+
+		// Si ha ocurrido un error al eliminar, comprobamos
+		// el error y respondemos con el código http adecuado
+		switch errDelete.Error() {
+		case "user not found":
+			response(w, 404, "") // (404 - Not found)
+		default:
+			response(w, 500, "") // (500 - Internal Server Error)
+		}
+
+	} else {
+		// Devolvemos la confirmación
 		response(w, 200, "")
 	}
 }

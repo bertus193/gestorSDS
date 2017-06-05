@@ -13,22 +13,6 @@ import (
 	"github.com/bertus193/gestorSDS/utils"
 )
 
-/* Demo estructura en json
-"alu@alu.ua.es" : {
-    "MasterPassword": "accoutPass",
-    "Accounts": [
-        "facebook": {
-			"User": "usuarioFacebook"
-			"Password": "12345"
-		},
-        "twitter": {
-			"User": "usuarioTwitter"
-			"Password": "54321"
-		}
-    ]
-}
-*/
-
 var gestor = make(map[string]*model.Usuario)
 
 func init() {
@@ -116,7 +100,7 @@ func GetUser(email string, passw string) (*model.Usuario, error) {
 	return userResult, errResult
 }
 
-// GetEntries recupera la lista de entradas (sin detalles)
+// GetVaultEntries recupera la lista de entradas (sin detalles)
 // de un usuario
 func GetVaultEntries(email string) ([]string, error) {
 
@@ -130,11 +114,32 @@ func GetVaultEntries(email string) ([]string, error) {
 	} else {
 		// Recuperamos solo el "título" de las entradas
 		entriesResult = make([]string, len(user.Vault))
+		i := 0
 		for entry := range user.Vault {
-			entriesResult = append(entriesResult, entry)
+			entriesResult[i] = entry
+			i++
 		}
 	}
 	return entriesResult, errResult
+}
+
+func CreateTextVaultEntry(email string, entryTitle string, entryText string) error {
+	var errResult error
+
+	if user, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else if _, okEntry := user.Vault[entryTitle]; okEntry {
+		// Si ya existe una entrada con el mismo título
+		errResult = errors.New("entry already exists")
+	} else {
+		user.Vault[entryTitle] = model.VaultEntry{
+			Mode: 0, // Text
+			Text: entryText,
+		}
+	}
+
+	return errResult
 }
 
 func CreateAccountVaultEntry(email string, entryTitle string, userAccount string, passwAccount string) error {
@@ -155,6 +160,92 @@ func CreateAccountVaultEntry(email string, entryTitle string, userAccount string
 	}
 
 	return errResult
+}
+
+// ReadVaultEntry recupera la lista de entradas (sin detalles)
+// de un usuario
+func ReadVaultEntry(email string, entryTitle string) (model.VaultEntry, error) {
+
+	var entryResult model.VaultEntry
+	var errResult error
+
+	if user, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else if entry, okEntry := user.Vault[entryTitle]; !okEntry {
+		// Si no existe una entrada con el mismo título
+		errResult = errors.New("entry not found")
+	} else {
+		entryResult = entry
+	}
+
+	return entryResult, errResult
+}
+
+// DeleteVaultEntry recupera la lista de entradas (sin detalles)
+// de un usuario
+func DeleteVaultEntry(email string, entryTitle string) error {
+
+	var errResult error
+
+	if user, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else if _, okEntry := user.Vault[entryTitle]; !okEntry {
+		// Si no existe una entrada con el mismo título
+		errResult = errors.New("entry not found")
+	} else {
+		delete(gestor[email].Vault, entryTitle)
+	}
+
+	return errResult
+}
+
+// GetVaultEntries recupera la lista de entradas (sin detalles)
+// de un usuario
+func ReadUser(email string) (*model.Usuario, error) {
+
+	var userResult *model.Usuario
+	var errResult error
+
+	if user, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else {
+		userResult = user
+	}
+
+	return userResult, errResult
+}
+
+func UpdateA2F(email string, newState bool) error {
+
+	var errResult error
+
+	if user, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else {
+		user.A2FEnabled = newState
+	}
+
+	return errResult
+}
+
+// DeleteUser Elimina cuenta de usuario
+func DeleteUser(email string) error {
+
+	var errResult error
+
+	if _, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else {
+		delete(gestor, email)
+	}
+
+	return errResult
+
 }
 
 /**/
@@ -187,58 +278,4 @@ func GetUserFromEmail(userEmail string) (*model.Usuario, error) {
 		err = errors.New("user not found")
 	}
 	return user, err
-}
-
-// AddAccountToUser añade datos a un ya dado de alta
-func AddAccountToUser(userEmail string, serviceName string, serviceUser string, servicePass string) {
-	// todo: comprobar que el usuario existe antes de asignar
-
-	gestor[userEmail].Vault[serviceName] = model.VaultEntry{User: serviceUser, Password: servicePass}
-}
-
-// GetJSONAllAccountsFromUser listado de cuentas asignadas a un usuario
-func GetJSONAccountFromUser(usuario string, nombreServicio string) string {
-	userAccount := gestor[usuario].Vault[nombreServicio]
-	// todo: comprobar y validar contraseña
-
-	j, err := json.Marshal(userAccount)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return string(j)
-}
-
-// GetAll (Debug) Devuelve un string json con todos los datos
-func GetAll() string {
-	j, err := json.Marshal(gestor)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return string(j)
-}
-
-// SetAccountUser Modifica cuenta de usuario
-func SetAccount(userEmail string, serviceName string, serviceUser string, servicePass string) {
-	// todo: comprobar que el usuario existe antes de asignar
-	gestor[userEmail].Vault[serviceName] = model.VaultEntry{User: serviceUser, Password: servicePass}
-}
-
-// deleteAccount Elimina cuenta de usuario
-func DeleteAccount(userEmail string, serviceName string) {
-	// todo: comprobar que el usuario existe antes de asignar
-	delete(gestor[userEmail].Vault, serviceName)
-}
-
-// deleteAccount Elimina cuenta de usuario
-func DeleteUser(userEmail string) {
-	// todo: comprobar que el usuario existe antes de asignar
-	delete(gestor, userEmail)
-}
-
-func ToggleA2f(userEmail string, status bool) {
-	gestor[userEmail].A2FEnabled = status
 }

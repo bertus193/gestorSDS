@@ -10,16 +10,31 @@ type Usuario struct {
 }
 
 type VaultEntry struct {
-	Title string
-	Mode  int
+	Mode int
 	// Mode 0 - Plain text
 	Text string
 	// Mode 1 - Account
 	User     string
 	Password string
-	// Mode 2 - Credit card
-	CreditCard string
 }
+
+/* Demo estructura en json (sin cifrados)
+"alu@alu.ua.es" : {
+    "UserPassword": 	"accoutPass",
+    "UserPasswordSalt": "accoutSalrPass",
+    "Vault": [
+        "memoria": {
+			"Mode": "0""
+			"Text": "texto de la entrada"
+		},
+        "twitter": {
+			"Mode": "1"
+			"User": "usuarioTwitter"
+			"Password": "54321"
+		}
+    ]
+}
+*/
 
 /* -------------------------------- */
 

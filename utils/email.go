@@ -17,11 +17,7 @@ func SendWelcome(sendTo string) {
 		"Gracias, \n" +
 		"El equipo de cuentas de " + config.AppName + "."
 
-	// sendEmail(sendTo, subject, body)
-	// DEBUG
-	log.Println(sendTo)
-	log.Println(subject)
-	log.Println(body)
+	sendEmail(sendTo, subject, body)
 }
 
 // Send2FACode envía un correo electrónico a la dirección indicada
@@ -37,12 +33,7 @@ func Send2FACode(sendTo string, authCode string) {
 		"Gracias, \n" +
 		"El equipo de cuentas de " + config.AppName + "."
 
-	// sendEmail(sendTo, subject, body)
-	// DEBUG
-	log.Println(sendTo)
-	log.Println(authCode)
-	log.Println(subject)
-	log.Println(body)
+	sendEmail(sendTo, subject, body)
 }
 
 func sendEmail(sendTo string, subject string, body string) {
@@ -57,14 +48,22 @@ func sendEmail(sendTo string, subject string, body string) {
 		"Subject: " + subject + "\n\n" +
 		body
 
-	err := smtp.SendMail(smtpServer+":"+smtpPort,
-		smtp.PlainAuth("", from, pass, smtpServer),
-		from, []string{sendTo}, []byte(msg))
+	if config.EmailDebug == true {
+		// Mostramos en terminal
+		log.Println(sendTo)
+		log.Println(subject)
+		log.Println(body)
+	} else {
+		// Enviamos el correo
+		err := smtp.SendMail(smtpServer+":"+smtpPort,
+			smtp.PlainAuth("", from, pass, smtpServer),
+			from, []string{sendTo}, []byte(msg))
 
-	if err != nil {
-		log.Printf("smtp error: %s", err)
-		return
+		if err != nil {
+			log.Printf("smtp error: %s", err)
+			return
+		}
 	}
 
-	log.Print("sent")
+	log.Print("email sent")
 }

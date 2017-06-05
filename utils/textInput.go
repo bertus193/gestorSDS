@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"os"
+	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -22,7 +23,7 @@ func CustomScanf() string {
 // sin que se muestre el texto introducido en pantalla
 func GetPassw() string {
 	passwordStr := ""
-	password, err := terminal.ReadPassword(0)
+	password, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err == nil {
 		passwordStr = string(password)
 	}

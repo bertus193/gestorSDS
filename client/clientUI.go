@@ -82,7 +82,7 @@ func uiRegistroUsuario(fromError string) {
 	fmt.Print("Email: ")
 	inputUser := utils.CustomScanf()
 	fmt.Print("Contraseña: ")
-	inputPass := utils.CustomScanf()
+	inputPass := utils.GetPassw()
 
 	// Petición al servidor
 	if err := registroUsuario(httpClient, inputUser, inputPass); err != nil {
@@ -117,7 +117,7 @@ func uiLoginUser(fromError string) {
 	fmt.Print("Email: ")
 	inputUser := utils.CustomScanf()
 	fmt.Print("Contraseña: ")
-	inputPass := utils.CustomScanf()
+	inputPass := utils.GetPassw()
 
 	// Petición al servidor
 	if err := loginUsuario(httpClient, inputUser, inputPass); err != nil {
@@ -296,7 +296,7 @@ func uiAddNewEntry(fromError string) {
 
 	} else {
 		fmt.Print("Contraseña: ")
-		finalPassw = utils.CustomScanf()
+		finalPassw = utils.GetPassw()
 	}
 
 	// Petición al servidor

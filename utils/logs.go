@@ -31,17 +31,23 @@ func AddLog(logMessage string) {
 func newLogFile() *os.File {
 	var result []string
 	currentDay := time.Now().Local().Format("2006-01-02")
+
+	//Crear carpeta logs si no existe
+	if _, err := os.Stat("./server/logs"); os.IsNotExist(err) {
+		os.Mkdir("./server/logs", 0777)
+	}
+
 	path = "./server/logs/" + currentDay + ".log"
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
-		log.Printf("error opening file: %v", err)
+		log.Printf("1error opening file: %v", err)
 	} else {
 		bytesEntrada, err := ioutil.ReadFile(path)
 		if err != nil {
 			log.Println("Error lectura fichero logs")
 		} else if len(string(bytesEntrada)) > 0 {
 
-			if config.CifrateLogs == true {
+			if config.EncryptLogs == true {
 
 			}
 			if err := json.Unmarshal(bytesEntrada, &result); err != nil {
@@ -61,6 +67,12 @@ func newLogFile() *os.File {
 func LaunchLogger(inputFile string, outputFile string) {
 	var result []string
 	log.Println("Desencriptando fichero...")
+
+	//Crear carpeta logs si no existe
+	if _, err := os.Stat("./server/logs/"); os.IsNotExist(err) {
+		os.Mkdir("./server/logs/", 644)
+	}
+
 	input, err := ioutil.ReadFile("./server/logs/" + inputFile)
 	if err != nil {
 		log.Println("El fichero introducido no existe")
@@ -93,7 +105,7 @@ func AfterLogs() {
 
 	if err != nil {
 		log.Println(err)
-	} else if config.CifrateLogs == true {
+	} else if config.EncryptLogs == true {
 		bytesSalida := Encrypt(j, config.PassCifrateLogs)
 		logFile.Write(bytesSalida)
 	} else {

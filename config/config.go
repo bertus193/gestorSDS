@@ -32,8 +32,8 @@ var Account2FA = map[string]string{
 	"smtpPort":   "587",
 }
 
-//CifrateLogs se encarga de indicar si se desea encriptar el log del servidor
-var CifrateLogs = true
+//EncryptLogs se encarga de indicar si se desea encriptar el log del servidor
+var EncryptLogs = true
 
 //PassCifrateLogs Password encriptacion Logs
 var PassCifrateLogs = []byte("a really difficult logg password")

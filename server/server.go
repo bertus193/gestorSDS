@@ -28,7 +28,7 @@ func Launch() {
 	mux.Handle("/a2f/activar", http.HandlerFunc(activarA2F))
 	mux.Handle("/a2f/desactivar", http.HandlerFunc(desactivarA2F))
 	mux.Handle("/a2f/desbloquear", http.HandlerFunc(desbloquearA2F))
-	mux.Handle("/cuentas", http.HandlerFunc(listarCuentas))
+	mux.Handle("/vault", http.HandlerFunc(listarEntradas))
 	mux.Handle("/vault/nueva", http.HandlerFunc(crearEntrada))
 	mux.Handle("/vault/detalles", http.HandlerFunc(detallesEntrada))
 	mux.Handle("/vault/eliminar", http.HandlerFunc(eliminarEntrada))

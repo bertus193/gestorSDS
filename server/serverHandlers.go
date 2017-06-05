@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"log"
+
 	"github.com/bertus193/gestorSDS/model"
 	"github.com/bertus193/gestorSDS/server/database"
 	"github.com/bertus193/gestorSDS/utils"
@@ -129,7 +131,7 @@ func desbloquearA2F(w http.ResponseWriter, req *http.Request) {
 }
 
 // Recupera las cuentas de servicio de un usuario de la BD
-func listarCuentas(w http.ResponseWriter, req *http.Request) {
+func listarEntradas(w http.ResponseWriter, req *http.Request) {
 	// Parseamos el formulario
 	req.ParseForm()
 
@@ -146,13 +148,28 @@ func listarCuentas(w http.ResponseWriter, req *http.Request) {
 	if email, errSession := GetUserFromSession(token); errSession != nil {
 		// La sesión ha caducado o no es valida
 		response(w, 401, "") // (401 - Unauthorized)
-	} else if entries, errEntries := database.GetVaultEntries(email); errEntries != nil {
-		response(w, 500, "") // (500 - Internal Server Error)
-	} else if entriesJSON, errJSON := json.Marshal(entries); errJSON != nil {
+	} else if user, errUser := database.ReadUser(email); errUser != nil {
 		response(w, 500, "") // (500 - Internal Server Error)
 	} else {
+		entriesList := model.ListaEntradas{}
+		for entry := range user.Vault {
+			tempEntry := user.Vault[entry]
+			if tempEntry.Mode == 0 { // Texto
+				// Guardamos solo lo que mostraremos, el título
+				entriesList.Texts = append(entriesList.Texts, entry)
+			} else if tempEntry.Mode == 1 { //Account
+				// Guardamos solo lo que mostraremos, el título
+				entriesList.Accounts = append(entriesList.Accounts, entry)
+			}
+		}
+
 		// Devolvemos la información
-		response(w, 200, string(entriesJSON))
+		if entriesJSON, errJSON := json.Marshal(entriesList); errJSON != nil {
+			response(w, 500, "") // (500 - Internal Server Error)
+		} else {
+			log.Println(string(entriesJSON))
+			response(w, 200, string(entriesJSON))
+		}
 	}
 }
 

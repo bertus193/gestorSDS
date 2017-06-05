@@ -46,4 +46,9 @@ type DetallesUsuario struct {
 	NumEntries int
 }
 
+type ListaEntradas struct {
+	Texts    []string
+	Accounts []string
+}
+
 /* -------------------------------- */

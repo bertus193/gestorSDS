@@ -145,16 +145,16 @@ func desbloquearA2F(client *http.Client, a2fcode string) error {
 	return errResult
 }
 
-func listarCuentas(client *http.Client) ([]string, error) {
+func listarEntradas(client *http.Client) (model.ListaEntradas, error) {
 
-	var entriesResult []string
+	var entriesResult = model.ListaEntradas{}
 	var errResult error
 
 	data := url.Values{}
 	data.Set("token", sessionToken)
 
 	// Realizamos la petición
-	response, err := client.PostForm(baseURL+"/cuentas", data)
+	response, err := client.PostForm(baseURL+"/vault", data)
 	if err == nil {
 		// Si el código de estado recibido no es el esperado (200)
 		if response.StatusCode != 200 {
@@ -172,7 +172,7 @@ func listarCuentas(client *http.Client) ([]string, error) {
 			if contents, errRead := ioutil.ReadAll(response.Body); errRead != nil {
 				errResult = errors.New("unable to read")
 			} else {
-				result := make([]string, 0)
+				result := model.ListaEntradas{}
 				// Recuperamos el objeto del mensaje original
 				if errJSON := json.Unmarshal(contents, &result); errJSON != nil {
 					errResult = errors.New("unable to unmarshal")

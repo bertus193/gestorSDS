@@ -16,12 +16,12 @@ var httpClient *http.Client
 
 func startUI(c *http.Client) {
 	httpClient = c
-	uiInicio("")
+	uiInicio("", "")
 }
 
 // Pantalla de bienvenida con las opciones de
 // login, registro y cerrar aplicación
-func uiInicio(fromError string) {
+func uiInicio(showError string, showSuccess string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -29,14 +29,18 @@ func uiInicio(fromError string) {
 	// Título de la pantalla
 	fmt.Printf("# Bienvenido a %s\n\n", config.AppName)
 
+	// Mensaje de confirmación de acción en caso de existir
+	if showSuccess != "" {
+		color.HiGreen("* %s\n\n", showSuccess)
+	}
 	// Opciones
 	fmt.Println("1. Entrar")
 	fmt.Println("2. Crear usuario")
 	fmt.Println("0. Salir")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		color.Red("\n* %s", fromError)
+	if showError != "" {
+		color.HiRed("\n* %s", showError)
 	}
 
 	// Lectura de opción elegida
@@ -52,12 +56,12 @@ func uiInicio(fromError string) {
 	case inputSelectionStr == "0": // Salir
 		os.Exit(0)
 	default:
-		uiInicio("La opción elegida no es correcta")
+		uiInicio("La opción elegida no es correcta", "")
 	}
 }
 
 // Pantalla de creación de usuario
-func uiRegistroUsuario(fromError string) {
+func uiRegistroUsuario(showError string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -66,8 +70,8 @@ func uiRegistroUsuario(fromError string) {
 	fmt.Printf("# Registro de usuarios\n\n")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		fmt.Printf("* %s\n\n", fromError)
+	if showError != "" {
+		color.HiRed("* %s\n\n", showError)
 	}
 
 	// Lectura de datos del nuevo usuario
@@ -87,12 +91,12 @@ func uiRegistroUsuario(fromError string) {
 		}
 	} else {
 		// Registro completado, volvemos a la pantalla de inicio
-		uiInicio("")
+		uiInicio("", "Registro completado, ya puedes iniciar sesión")
 	}
 }
 
 // Pantalla de entrada de usuarios
-func uiLoginUser(fromError string) {
+func uiLoginUser(showError string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -101,8 +105,8 @@ func uiLoginUser(fromError string) {
 	fmt.Printf("# Entrada de usuarios\n\n")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		color.Red("* %s\n\n", fromError)
+	if showError != "" {
+		color.HiRed("* %s\n\n", showError)
 	}
 
 	// Lectura de datos del usuario
@@ -117,14 +121,14 @@ func uiLoginUser(fromError string) {
 		// Si hay un error, mostramos el mensaje de error adecuado
 		switch err.Error() {
 		case "user not found":
-			uiInicio("No exite ningún usuario con esos datos.")
+			uiInicio("No exite ningún usuario con esos datos.", "")
 		case "passwords do not match":
 			// No damos información detallada del error en este caso
-			uiInicio("No exite ningún usuario con esos datos.")
+			uiInicio("No exite ningún usuario con esos datos.", "")
 		case "a2f required":
 			uiUnlockA2F("")
 		default:
-			uiInicio("Ocurrio un error al realizar el login.")
+			uiInicio("Ocurrio un error al realizar el login.", "")
 		}
 
 	} else {
@@ -133,7 +137,7 @@ func uiLoginUser(fromError string) {
 	}
 }
 
-func uiUnlockA2F(fromError string) {
+func uiUnlockA2F(showError string) {
 	// Limpiamos la pantalla
 	utils.ClearScreen()
 
@@ -141,11 +145,11 @@ func uiUnlockA2F(fromError string) {
 	fmt.Printf("# Verificación en 2 pasos\n\n")
 
 	// Mensaje de información
-	fmt.Printf("Te hemos enviado un correo a tu cuenta con el código que debes introducir para iniciar sesión.\n\n")
+	color.HiGreen("> Te hemos enviado un correo a tu cuenta con el código que debes introducir para iniciar sesión.\n\n")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		fmt.Printf("* %s\n\n", fromError)
+	if showError != "" {
+		color.HiRed("* %s\n\n", showError)
 	}
 
 	// Lectura de opción elegida
@@ -173,7 +177,7 @@ func uiUnlockA2F(fromError string) {
 	}
 }
 
-func uiUserMainMenu(fromError string, fromMessage string) {
+func uiUserMainMenu(showError string, showSuccess string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -181,19 +185,15 @@ func uiUserMainMenu(fromError string, fromMessage string) {
 	// Título de la pantalla
 	fmt.Printf("# Página de usuario\n")
 
-	// Mensaje de error en caso de existir
-	if fromError != "" {
-		color.Red("* %s", fromError)
-	} else if fromMessage != "" {
-		color.Green("* %s", fromMessage)
-	} else {
-		fmt.Printf("\n")
+	// Mensaje de confirmación de acción en caso de existir
+	if showSuccess != "" {
+		color.HiGreen("\n* %s\n", showSuccess)
 	}
 
 	// Recuperamos las cuentas del usuario
-	fmt.Printf("------ Listado de entradas ------\n\n")
+	fmt.Printf("\n------ Listado de entradas ------\n\n")
 	// Petición al servidor
-	entradas, err := listarCuentas(httpClient)
+	entradas, err := listarEntradas(httpClient)
 	if err != nil {
 		// Si hay un error, mostramos el mensaje de error adecuado
 		switch err.Error() {
@@ -203,13 +203,33 @@ func uiUserMainMenu(fromError string, fromMessage string) {
 			fmt.Println("Ocurrio un error al recuperar las entradas." + err.Error())
 		}
 	} else {
-		if entradas != nil && len(entradas) != 0 {
-			// Imprimimos los resultados
-			for c := range entradas {
-				fmt.Printf("[%s]\n", entradas[c])
+		// Mostramos la lista de cuentas de usuario guardadas
+
+		boldBlue := color.New(color.FgHiBlue, color.Bold)
+		if (entradas.Accounts != nil && len(entradas.Accounts) != 0) ||
+			(entradas.Texts != nil && len(entradas.Texts) != 0) {
+
+			// Mostramos la lista de cuentas de usuario guardadas
+			if entradas.Accounts != nil && len(entradas.Accounts) != 0 {
+				boldBlue.Printf(" Cuentas de usuario\n")
+				// Imprimimos los resultados
+				for c := range entradas.Accounts {
+					fmt.Printf("    [%s]\n", entradas.Accounts[c])
+				}
+				fmt.Printf("\n")
 			}
+
+			// Mostramos la lista de textos guardados
+			if entradas.Texts != nil && len(entradas.Texts) != 0 {
+				boldBlue.Printf(" Textos guardados\n")
+				// Imprimimos los resultados
+				for c := range entradas.Texts {
+					fmt.Printf("    [%s]\n", entradas.Texts[c])
+				}
+			}
+
 		} else {
-			fmt.Printf("* No hay nada guardado todavía\n")
+			boldBlue.Printf("* No hay nada guardado todavía\n")
 		}
 	}
 	fmt.Printf("\n--------------------------------\n\n")
@@ -220,6 +240,11 @@ func uiUserMainMenu(fromError string, fromMessage string) {
 	fmt.Println("3. Configuración de mi cuenta")
 	fmt.Println("0. Salir")
 
+	// Mensaje de error en caso de existir
+	if showError != "" {
+		color.HiRed("\n* %s", showError)
+	}
+
 	// Lectura de opción elegida
 	fmt.Printf("\nSeleccione una opción: ")
 	inputSelectionStr := utils.CustomScanf()
@@ -229,19 +254,19 @@ func uiUserMainMenu(fromError string, fromMessage string) {
 	case inputSelectionStr == "1":
 		uiAddNewEntry("")
 	case inputSelectionStr == "2":
-		fmt.Print("Elige la cuenta: ")
+		fmt.Print("Escribe el nombre de la entrada: ")
 		inputEntrySelectionStr := utils.CustomScanf()
 		uiDetailsEntry("", inputEntrySelectionStr)
 	case inputSelectionStr == "3":
 		uiUserConfiguration("")
 	case inputSelectionStr == "0":
-		uiInicio("")
+		uiInicio("", "")
 	default:
 		uiUserMainMenu("La opción elegida no es correcta", "")
 	}
 }
 
-func uiAddNewEntry(fromError string) {
+func uiAddNewEntry(showError string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -249,14 +274,15 @@ func uiAddNewEntry(fromError string) {
 	// Título de la pantalla
 	fmt.Printf("# Añadir nueva entrada\n\n")
 
-	// Mensaje de error en caso de existir
-	if fromError != "" {
-		fmt.Printf("* %s\n\n", fromError)
-	}
-
 	// Solicitamos información de lo que queremos guardar de entre las posibles
 	fmt.Println("1. Texto")
 	fmt.Println("2. Cuenta de usuario")
+
+	// Mensaje de error en caso de existir
+	if showError != "" {
+		color.HiRed("\n* %s\n", showError)
+	}
+
 	fmt.Printf("\nSeleccione una opción: ")
 	inputEntryMode := utils.CustomScanf()
 
@@ -270,7 +296,7 @@ func uiAddNewEntry(fromError string) {
 	}
 }
 
-func uiAddNewTextEntry(fromError string) {
+func uiAddNewTextEntry(showError string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -279,14 +305,14 @@ func uiAddNewTextEntry(fromError string) {
 	fmt.Printf("# Añadir nuevo texto\n\n")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		color.Red("* %s\n\n", fromError)
+	if showError != "" {
+		color.HiRed("* %s\n\n", showError)
 	}
 
 	// Lectura de los datos de la nueva entrada
 	fmt.Printf("\nEscribe el título del texto: ")
 	inputTitle := utils.CustomScanf()
-	fmt.Printf("\nEscribe el texto que quieres guardar:\n\n")
+	fmt.Printf("\nEscribe el texto que quieres guardar (ENTER para terminar):\n\n")
 	inputText := utils.CustomScanf()
 
 	// Petición al servidor
@@ -307,7 +333,7 @@ func uiAddNewTextEntry(fromError string) {
 	}
 }
 
-func uiAddNewAccountEntry(fromError string) {
+func uiAddNewAccountEntry(showError string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -316,8 +342,8 @@ func uiAddNewAccountEntry(fromError string) {
 	fmt.Printf("# Añadir nueva cuenta de usuario\n\n")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		fmt.Printf("* %s\n\n", fromError)
+	if showError != "" {
+		color.HiRed("* %s\n\n", showError)
 	}
 
 	// Lectura de los datos de la nueva entrada
@@ -386,7 +412,7 @@ func uiAddNewAccountEntry(fromError string) {
 	}
 }
 
-func uiDetailsEntry(fromError string, entryName string) {
+func uiDetailsEntry(showError string, entryName string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -421,8 +447,8 @@ func uiDetailsEntry(fromError string, entryName string) {
 
 		} else if entry.Mode == 1 {
 			// Si es una entrada de tipo cuenta de usuario
-			fmt.Printf("[Usuario] %s\n", entry.User)
-			fmt.Printf("[Contraseña] %s\n", entry.Password)
+			fmt.Printf("[Usuario] -> %s \n", entry.User)
+			fmt.Printf("[Contraseña] -> %s \n", entry.Password)
 		}
 	}
 	fmt.Printf("\n--------------------------------\n\n")
@@ -432,8 +458,8 @@ func uiDetailsEntry(fromError string, entryName string) {
 	fmt.Println("0. Volver")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		fmt.Printf("\n* %s", fromError)
+	if showError != "" {
+		color.HiRed("\n* %s", showError)
 	}
 
 	// Lectura de opción elegida
@@ -472,7 +498,7 @@ func uiDetailsEntry(fromError string, entryName string) {
 	}
 }
 
-func uiUserConfiguration(fromError string) {
+func uiUserConfiguration(showError string) {
 
 	// Limpiamos la pantalla
 	utils.ClearScreen()
@@ -498,16 +524,21 @@ func uiUserConfiguration(fromError string) {
 	} else {
 
 		// Mostramos los detalles de la cuenta
-		fmt.Printf("Correo electrónico: %s\n", userDetails.Email)
-		fmt.Printf("Número de entradas guardadas: %d\n", userDetails.NumEntries)
+		boldBlue := color.New(color.FgHiBlue, color.Bold)
+		fmt.Printf("Correo electrónico: ")
+		boldBlue.Println(userDetails.Email)
+		fmt.Printf("Número de entradas guardadas: ")
+		boldBlue.Println(userDetails.NumEntries)
 		fmt.Printf("Segundo factor de autenticación: ")
 		if userDetails.A2FEnabled {
-			fmt.Println("Activado")
+			boldGreen := color.New(color.FgBlack, color.BgHiGreen, color.Bold)
+			boldGreen.Println(" Activado ")
 		} else {
-			fmt.Println("Desactivado")
+			boldRed := color.New(color.FgWhite, color.BgHiRed, color.Bold)
+			boldRed.Println(" Desactivado ")
 		}
 	}
-	fmt.Printf("\n\n----------------------------------\n\n")
+	fmt.Printf("\n------------------------------------\n\n")
 
 	// Opciones
 	fmt.Println("1. Modificar contraseña (to-do)")
@@ -520,8 +551,8 @@ func uiUserConfiguration(fromError string) {
 	fmt.Println("0. Volver")
 
 	// Mensaje de error en caso de existir
-	if fromError != "" {
-		fmt.Printf("\n* %s", fromError)
+	if showError != "" {
+		color.HiRed("\n* %s", showError)
 	}
 
 	// Lectura de opción elegida
@@ -550,7 +581,7 @@ func uiUserConfiguration(fromError string) {
 
 			} else {
 				// Se ha eliminado correctamente
-				uiInicio("Tu cuenta de usuario se ha borrado correctamente. Para usar " + config.AppName + " debes crear un nuevo usuario.")
+				uiInicio("Tu cuenta de usuario se ha borrado correctamente. Para usar "+config.AppName+" debes crear un nuevo usuario.", "")
 			}
 		} else {
 			uiUserConfiguration("")

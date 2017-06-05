@@ -163,36 +163,50 @@ func crearEntrada(w http.ResponseWriter, req *http.Request) {
 
 	// Recuperamos los datos
 	token := req.Form.Get("token")
-	nombreServicio := req.Form.Get("tituloEntrada")
-	usuarioServicio := req.Form.Get("usuarioCuenta")
-	passServicio := req.Form.Get("passwordCuenta")
+	tituloEntrada := req.Form.Get("tituloEntrada")
+	mode := req.Form.Get("mode") // Indica el tipo de entrada
 
 	// Logs
-	utils.AddLog("crearCuenta: [" + token + ", " + nombreServicio + ", " + usuarioServicio + ", " + passServicio + "]")
+	utils.AddLog("crearCuenta: [" + token + ", " + tituloEntrada + ", " + mode + "]")
 
-	// Cabecera estándar
-	w.Header().Set("Content-Type", "text/plain")
-
-	// Respondemos
+	// Recogemos el email del usuario
 	if email, errSession := GetUserFromSession(token); errSession != nil {
 		// La sesión ha caducado o no es valida
 		response(w, 401, "") // (401 - Unauthorized)
-	} else if errCreate := database.CreateAccountVaultEntry(email, nombreServicio, usuarioServicio, passServicio); errCreate != nil {
+	} else {
 
-		// Si ha ocurrido un error al insetar, comprobamos
-		// el error y respondemos con el código http adecuado
-		switch errCreate.Error() {
-		case "user not found":
-			response(w, 404, "") // (404 - Not found)
-		case "entry already exists":
-			response(w, 409, "") // (409 - Conflict)
-		default:
-			response(w, 500, "") // (500 - Internal Server Error)
+		var errCreate error
+		// Comprobamos el tipo de entrada que estamos creando
+		if mode == "0" {
+			// Si es una entrada de tipo texto
+			textoEntrada := req.Form.Get("textoEntrada")
+			database.CreateTextVaultEntry(email, tituloEntrada, textoEntrada)
+
+		} else if mode == "1" {
+			// Si es una entrada de tipo cuenta de usuario
+			usuarioEntradaCuenta := req.Form.Get("usuarioCuenta")
+			passwordEntradaCuenta := req.Form.Get("passwordCuenta")
+			database.CreateAccountVaultEntry(email, tituloEntrada, usuarioEntradaCuenta, passwordEntradaCuenta)
 		}
 
-	} else {
-		// Devolvemos la información
-		response(w, 201, "")
+		// Respondemos
+		if errCreate != nil {
+
+			// Si ha ocurrido un error al insetar, comprobamos
+			// el error y respondemos con el código http adecuado
+			switch errCreate.Error() {
+			case "user not found":
+				response(w, 404, "") // (404 - Not found)
+			case "entry already exists":
+				response(w, 409, "") // (409 - Conflict)
+			default:
+				response(w, 500, "") // (500 - Internal Server Error)
+			}
+
+		} else {
+			// Devolvemos la información
+			response(w, 201, "")
+		}
 	}
 }
 

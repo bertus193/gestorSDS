@@ -181,7 +181,7 @@ func uiUserMainMenu(fromError string) {
 	fmt.Printf("# Página de usuario\n\n")
 
 	// Recuperamos las cuentas del usuario
-	fmt.Printf("------ Listado de cuentas ------\n\n")
+	fmt.Printf("------ Listado de entradas ------\n\n")
 	// Petición al servidor
 	entradas, err := listarCuentas(httpClient)
 	if err != nil {
@@ -205,8 +205,8 @@ func uiUserMainMenu(fromError string) {
 	fmt.Printf("\n--------------------------------\n\n")
 
 	// Opciones
-	fmt.Println("1. Añadir cuenta")
-	fmt.Println("2. Ver detalle cuenta")
+	fmt.Println("1. Añadir entrada")
+	fmt.Println("2. Ver detalle de entrada")
 	fmt.Println("3. Configuración de mi cuenta")
 	fmt.Println("0. Salir")
 
@@ -249,6 +249,72 @@ func uiAddNewEntry(fromError string) {
 		fmt.Printf("* %s\n\n", fromError)
 	}
 
+	// Solicitamos información de lo que queremos guardar de entre las posibles
+	fmt.Println("1. Texto")
+	fmt.Println("2. Cuenta de usuario")
+	fmt.Printf("\nSeleccione una opción: ")
+	inputEntryMode := utils.CustomScanf()
+
+	switch inputEntryMode {
+	case "1":
+		uiAddNewTextEntry("")
+	case "2":
+		uiAddNewAccountEntry("")
+	default:
+		uiAddNewEntry("La opción elegida no es correcta.")
+	}
+}
+
+func uiAddNewTextEntry(fromError string) {
+
+	// Limpiamos la pantalla
+	utils.ClearScreen()
+
+	// Título de la pantalla
+	fmt.Printf("# Añadir nuevo texto\n\n")
+
+	// Mensaje de error en caso de existir
+	if fromError != "" {
+		fmt.Printf("* %s\n\n", fromError)
+	}
+
+	// Lectura de los datos de la nueva entrada
+	fmt.Printf("\nEscribe el título del texto: ")
+	inputTitle := utils.CustomScanf()
+	fmt.Printf("\nEscribe el texto que quieres guardar:\n\n")
+	inputText := utils.CustomScanf()
+
+	// Petición al servidor
+	if err := crearEntradaDeTexto(httpClient, inputTitle, inputText); err != nil {
+		// Si hay un error, mostramos el mensaje de error adecuado
+		switch err.Error() {
+		case "unauthorized":
+			uiLoginUser("La sesión de usuario ha cadudado.")
+		case "user not found":
+			uiLoginUser("Ha ocurrido un error al guardar la entrada en tu cuenta.")
+		case "2fa expired":
+			uiAddNewEntry("Ya existe una entrada con ese título.")
+		default:
+			uiUserMainMenu("Ocurrio un error al añadir la entrada el código.")
+		}
+	} else {
+		uiUserMainMenu("")
+	}
+}
+
+func uiAddNewAccountEntry(fromError string) {
+
+	// Limpiamos la pantalla
+	utils.ClearScreen()
+
+	// Título de la pantalla
+	fmt.Printf("# Añadir nueva cuenta de usuario\n\n")
+
+	// Mensaje de error en caso de existir
+	if fromError != "" {
+		fmt.Printf("* %s\n\n", fromError)
+	}
+
 	// Lectura de los datos de la nueva entrada
 	fmt.Print("Título de la entrada (twitter, facebook, etc): ")
 	inputAccountType := utils.CustomScanf()
@@ -258,7 +324,8 @@ func uiAddNewEntry(fromError string) {
 	inputGeneratePassw := utils.CustomScanf()
 	var finalPassw string
 	if inputGeneratePassw == "si" || inputGeneratePassw == "s" {
-		// Solicitamos infromación de como se desea generar la contraseña
+
+		// Solicitamos información de como se desea generar la contraseña
 
 		// Tamaño de la contraseña
 		var genLenght int
@@ -289,7 +356,7 @@ func uiAddNewEntry(fromError string) {
 	}
 
 	// Petición al servidor
-	if err := crearEntrada(httpClient, inputAccountType, inputAccountUser, finalPassw); err != nil {
+	if err := crearEntradaDeCuenta(httpClient, inputAccountType, inputAccountUser, finalPassw); err != nil {
 		// Si hay un error, mostramos el mensaje de error adecuado
 		switch err.Error() {
 		case "unauthorized":
@@ -312,7 +379,7 @@ func uiDetailsEntry(fromError string, entryName string) {
 	utils.ClearScreen()
 
 	// Título de la pantalla
-	fmt.Printf("# Detalles de cuenta [%s]\n\n", entryName)
+	fmt.Printf("# Detalles de la entrada [%s]\n\n", entryName)
 
 	// Petición al servidor
 	fmt.Printf("--------------------------------\n\n")
@@ -328,15 +395,22 @@ func uiDetailsEntry(fromError string, entryName string) {
 			fmt.Println("Ocurrió un error al recuperar las entradas." + err.Error())
 		}
 	} else {
-
 		// Si los detalles de la cuenta están vacios
 		if (model.VaultEntry{}) == entry {
 			// Volvemos al menú del usuario
 			uiUserMainMenu("No se han podido obtener detalles de la cuenta elegida.")
 		}
 
-		// Mostramos los detalles de la cuenta
-		fmt.Printf("[%s] -> (%s / %s)\n", entryName, entry.User, entry.Password)
+		// Comprobamos el tipo de entrada (texto, cuenta) y la mostramos
+		if entry.Mode == 0 {
+			// Si es una entrada de tipo texto
+			fmt.Printf("[Texto] \n\n%s\n", entry.Text)
+
+		} else if entry.Mode == 1 {
+			// Si es una entrada de tipo cuenta de usuario
+			fmt.Printf("[Usuario] %s\n", entry.User)
+			fmt.Printf("[Contraseña] %s\n", entry.Password)
+		}
 	}
 	fmt.Printf("\n--------------------------------\n\n")
 
@@ -412,7 +486,7 @@ func uiUserConfiguration(fromError string) {
 
 		// Mostramos los detalles de la cuenta
 		fmt.Printf("Correo electrónico: %s\n", userDetails.Email)
-		fmt.Printf("Número de cuentas guardadas: %d\n", userDetails.NumEntries)
+		fmt.Printf("Número de entradas guardadas: %d\n", userDetails.NumEntries)
 		fmt.Printf("Segundo factor de autenticación: ")
 		if userDetails.A2FEnabled {
 			fmt.Println("Activado")

@@ -13,22 +13,6 @@ import (
 	"github.com/bertus193/gestorSDS/utils"
 )
 
-/* Demo estructura en json
-"alu@alu.ua.es" : {
-    "MasterPassword": "accoutPass",
-    "Accounts": [
-        "facebook": {
-			"User": "usuarioFacebook"
-			"Password": "12345"
-		},
-        "twitter": {
-			"User": "usuarioTwitter"
-			"Password": "54321"
-		}
-    ]
-}
-*/
-
 var gestor = make(map[string]*model.Usuario)
 
 func init() {
@@ -139,6 +123,25 @@ func GetVaultEntries(email string) ([]string, error) {
 	return entriesResult, errResult
 }
 
+func CreateTextVaultEntry(email string, entryTitle string, entryText string) error {
+	var errResult error
+
+	if user, okUser := gestor[email]; !okUser {
+		// Si no existe el el usuario indicado, no modificamos nada
+		errResult = errors.New("user not found")
+	} else if _, okEntry := user.Vault[entryTitle]; okEntry {
+		// Si ya existe una entrada con el mismo título
+		errResult = errors.New("entry already exists")
+	} else {
+		user.Vault[entryTitle] = model.VaultEntry{
+			Mode: 0, // Text
+			Text: entryText,
+		}
+	}
+
+	return errResult
+}
+
 func CreateAccountVaultEntry(email string, entryTitle string, userAccount string, passwAccount string) error {
 	var errResult error
 
@@ -159,7 +162,7 @@ func CreateAccountVaultEntry(email string, entryTitle string, userAccount string
 	return errResult
 }
 
-// GetVaultEntries recupera la lista de entradas (sin detalles)
+// ReadVaultEntry recupera la lista de entradas (sin detalles)
 // de un usuario
 func ReadVaultEntry(email string, entryTitle string) (model.VaultEntry, error) {
 

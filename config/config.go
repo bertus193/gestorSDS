@@ -32,8 +32,13 @@ var Account2FA = map[string]string{
 	"smtpPort":   "587",
 }
 
-//EncryptLogs se encarga de indicar si se desea encriptar el log del servidor
+// EmailDebug permite comprobar las funcionalidades que
+// hacen uso de correos electrónicos sin realizar el envío.
+// Una vez puesto a "true", los correos se mostrarán por la salida estandar.
+var EmailDebug = true
+
+// EncryptLogs se encarga de indicar si se desea encriptar el log del servidor
 var EncryptLogs = true
 
-//PassCifrateLogs Password encriptacion Logs
-var PassCifrateLogs = []byte("a really difficult logg password")
+// PassEncryptLogs Password encriptacion Logs
+var PassEncryptLogs = []byte("a really difficult logg password")

@@ -194,12 +194,56 @@ func listarCuentas(client *http.Client) ([]string, error) {
 	return entriesResult, errResult
 }
 
-func crearEntrada(client *http.Client, tituloEntrada string, usuario string, password string) error {
+func crearEntradaDeTexto(client *http.Client, tituloEntrada string, textoEntrada string) error {
 
 	var errResult error
 
 	data := url.Values{}
 	data.Set("token", sessionToken)
+	data.Set("mode", "0") // Mode 0 - Texto
+	data.Set("tituloEntrada", tituloEntrada)
+
+	encryptText := utils.Encode64(utils.Encrypt([]byte(textoEntrada), keyData))
+	data.Set("textoEntrada", encryptText)
+
+	// Realizamos la petición
+	response, err := client.PostForm(baseURL+"/vault/nueva", data)
+
+	if err == nil {
+		// Si el código de estado recibido no es el esperado (201)
+		if response.StatusCode != 201 {
+
+			// Comprobamos el código de estado recibido
+			switch response.StatusCode {
+			case 401: // (401 - Unauthorized)
+				errResult = errors.New("unauthorized")
+			case 404: // (404 - Not found)
+				errResult = errors.New("user not found")
+			case 409: // (409 - Conflict)
+				errResult = errors.New("entry already exists")
+			default:
+				errResult = errors.New("unknown")
+			}
+		}
+
+	} else {
+		// La petición al servidor no ha obtenido respuesta
+		fmt.Println("* No se ha podido comunicar con el servidor")
+		os.Exit(0)
+	}
+	// Cerramos la conexión
+	defer response.Body.Close()
+
+	return errResult
+}
+
+func crearEntradaDeCuenta(client *http.Client, tituloEntrada string, usuario string, password string) error {
+
+	var errResult error
+
+	data := url.Values{}
+	data.Set("token", sessionToken)
+	data.Set("mode", "1") // Mode 1 - Cuenta de usuario
 	data.Set("tituloEntrada", tituloEntrada)
 	data.Set("usuarioCuenta", usuario)
 
@@ -275,11 +319,24 @@ func detallesEntrada(client *http.Client, tituloEntrada string) (model.VaultEntr
 				if errJSON := json.Unmarshal(contents, &tempEntry); errJSON != nil {
 					errResult = errors.New("unable to unmarshal")
 				} else {
-					// Desciframos la contraseña
-					detailResult = model.VaultEntry{
-						Mode:     1, // Account
-						User:     tempEntry.User,
-						Password: string(utils.Decrypt(utils.Decode64(tempEntry.Password), keyData)),
+
+					// Comprobamos el tipo de entrada (texto, cuenta) y la descriframos
+					if tempEntry.Mode == 0 {
+						// Si es una entrada de tipo texto
+						// Desciframos el texto
+						detailResult = model.VaultEntry{
+							Mode: 0, // Text
+							Text: string(utils.Decrypt(utils.Decode64(tempEntry.Text), keyData)),
+						}
+
+					} else if tempEntry.Mode == 1 {
+						// Si es una entrada de tipo cuenta de usuario
+						// Desciframos la contraseña
+						detailResult = model.VaultEntry{
+							Mode:     1, // Account
+							User:     tempEntry.User,
+							Password: string(utils.Decrypt(utils.Decode64(tempEntry.Password), keyData)),
+						}
 					}
 				}
 			}
